@@ -22,7 +22,7 @@
 - возможность кастомизации цветовой схемы, быстрое переключение сетки в режим День/Ночь;
 - диалоговое меню настроек скрипта
 
-# [Скачать](https://github.com/d7KrEoL/avionics/releases/download/MINOR/SW_Avionics.zip)  
+# [Скачать](https://github.com/d7KrEoL/avionics/releases/download/MINOR/ViRPiL_Avionics_v0.1.2-beta.1b1609.tar)  
 
 ## Установка
 
