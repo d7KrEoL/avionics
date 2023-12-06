@@ -22,7 +22,7 @@
 - возможность кастомизации цветовой схемы, быстрое переключение сетки в режим День/Ночь;
 - диалоговое меню настроек скрипта
 
-# [Скачать актуальную версию](https://github.com/d7KrEoL/avionics/releases/download/MAJOR/ViRPiL_Avionics_v0.1.3-beta.2209.2.zip)
+# [Скачать актуальную версию](https://github.com/d7KrEoL/avionics/releases/download/0.1.4/ViRPiL_Avionics_v0.1.4-beta.0712.zip)
 
 ## Установка
 
@@ -37,8 +37,7 @@
    - [Для версии 0.3-DL можно скачать тут](https://www.blast.hk/threads/138813/)
 >[!NOTE]
 >*Обратите внимение, версия именно [0.3.7-R3](https://getfiles.do.am/load/0-0-0-52-20), а не 0.3.7-R5, которая на данный момент является последней. Скачать нужную версию samp можно [здесь](https://getfiles.do.am/load/0-0-0-52-20).
-4. socket
-   - Лежит в релизном архиве, для установки нужно просто [следовать инструкции](README.md##Установка)
+4. imgui (лежит в релизном архиве, скачать можно так же [отсюда](https://www.blast.hk/threads/19292/))
 ![SW_Avionics](https://github.com/d7KrEoL/avionics/assets/74565655/5b267a8c-40de-4ca7-af5c-d2077b8ebebd)
 
 ## Системные требования, версии клиента
