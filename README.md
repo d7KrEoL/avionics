@@ -38,7 +38,6 @@
 >[!NOTE]
 >*Обратите внимение, версия именно [0.3.7-R3](https://getfiles.do.am/load/0-0-0-52-20), а не 0.3.7-R5, которая на данный момент является последней. Скачать нужную версию samp можно [здесь](https://getfiles.do.am/load/0-0-0-52-20).
 4. imgui (лежит в релизном архиве, скачать можно так же [отсюда](https://www.blast.hk/threads/19292/))
-![SW_Avionics](https://github.com/d7KrEoL/avionics/assets/74565655/5b267a8c-40de-4ca7-af5c-d2077b8ebebd)
 
 ## Системные требования, версии клиента
 >[!NOTE]
