@@ -1,5 +1,7 @@
 # Установка скрипта и системные требования
 
+[<-Оглавление](https://github.com/d7KrEoL/avionics/blob/main/Readme/Wiki/WIKI.md)
+
 ## Системные требования
 
 >[!NOTE]
