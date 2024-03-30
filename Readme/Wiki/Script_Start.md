@@ -1,4 +1,7 @@
 # Запуск скрипта
+
+[<-Оглавление](https://github.com/d7KrEoL/avionics/blob/main/Readme/Wiki/WIKI.md)
+
 1. Убедиться что [скрипт установлен правильно](https://github.com/d7KrEoL/avionics/blob/main/Readme/Wiki/Script_Install.md)
 2. Запустить samp
 3. Сесть в любой летательный аппарат
