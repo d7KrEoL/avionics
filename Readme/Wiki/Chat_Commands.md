@@ -1,4 +1,7 @@
 # Чат-Команды скрипта:
+
+[<-Оглавление](https://github.com/d7KrEoL/avionics/blob/main/Readme/Wiki/WIKI.md)
+
 - /swavionics - Открыть меню скрипта
 - /avionix - Дублирующая команда, аналогично с /swavionics
 - /swav - Дублирующая команда, аналогично с /swavionics
