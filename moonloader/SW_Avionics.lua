@@ -1331,24 +1331,24 @@ end
 #----------------------------------------------------------#region UPDATES
 function UpdatePlaneDamage(vehID)
 	chp = getCarHealth(vehID)
-	if (chp > 800) then
-		DamageLevel = 0
-	else
-		if (chp > 700) then
-			DamageLevel = 1
-		else
-			if (chp > 500) then
-				DamageLevel = 2
-			else
-				if (chp > 350) then
-					DamageLevel = 3
-				else
-					DamageLevel = 4
-					if (chp < 237) and settings.maincfg.IsAutoLeave then taskLeaveCar(PLAYER_PED, vehID) end
-				end
-			end
-		end
+	if (chp < 350) then 
+		DamageLevel = 4
+		if (chp < 237) and settings.maincfg.IsAutoLeave then taskLeaveCar(PLAYER_PED, vehID) end
+		return
 	end
+	if (chp < 500) then
+		DamageLevel = 3
+		return
+	end
+	if (chp < 700) then
+		DamageLevel = 2
+		return
+	end
+	if (chp < 800) then
+		DamageLevel = 1
+		return
+	end
+	DamageLevel = 0
 end
 
 function UpdatePlaneGUI(vehID)
