@@ -7,6 +7,7 @@
 #### 3. [Доступные чат-команды](https://github.com/d7KrEoL/avionics/blob/main/Readme/Wiki/Chat_Commands.md)
 #### 4. [Главное меню](https://github.com/d7KrEoL/avionics/blob/main/Readme/Wiki/Main_Menu.md)
 #### 5. [Поддерживаемое ПО](https://github.com/d7KrEoL/avionics/blob/main/Readme/Wiki/Supported_Progs.md)
+#### 6. [FAQ возможные проблемы со скриптом](https://github.com/d7KrEoL/avionics/blob/main/Readme/Wiki/Problems.md)
 
 ## Основные режимы работы авионики
 #### 1. [Режим НАВ](https://github.com/d7KrEoL/avionics/blob/main/Readme/Wiki/Mode_NAV.md)
