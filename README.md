@@ -23,16 +23,14 @@
 - система повреждений с возможностью выхода из строя части оборудования при повреждении самолёта;
 - крюк/магнит для транспортировки пустых автомобилей по воздуху;
 - быстрое переключение сетки в режим День/Ночь;
-- поддержка редактора планов полёта [AvionicsEditor](https://github.com/d7KrEoL/AvionicsEditor/);
+- поддержка редактора планов полёта [AvionicsEditor](https://github.com/d7KrEoL/AvionicsEditor/) и онлайн-редактора [sampmap.ru](http://sampmap.ru);
 - меню настроек скрипта.
 
 
 
 
 
-# [Скачать актуальную версию](https://github.com/d7KrEoL/avionics/releases/download/0.1.5/ViRPiL_Avionics_v0.1.5-beta.3101.zip)
-
-
+# [Скачать актуальную версию](https://github.com/d7KrEoL/avionics/releases/download/0.1.6/ViRPiL_Avionics_v0.1.6-beta.0509.1.zip)
 
 
 
