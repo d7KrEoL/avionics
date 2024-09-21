@@ -14,8 +14,12 @@
 
 require 'moonloader'
 require 'sampfuncs'
+-- local RakLua = require 'RakLua'
+-- RakLua.defineSampLuaCompatibility()
 
 sampev = require 'lib.samp.events'
+
+--require 'samp/events/core'
 
 local as_action = require('moonloader').audiostream_state
 local safp = require 'safp'
@@ -229,6 +233,7 @@ local landing_dist
 function main()
 
 	repeat wait(0) until isSampLoaded()
+	--repeat wait(0) until isSampAvailable()
 	
 	InitVars()
 	InitGUI()
@@ -2358,6 +2363,7 @@ function UpdateLines2RU(vehID)
 	local vR = getCarRoll(vehID)
 	local vH = getCarHeading(vehID)
 	local screenResX, screenResY = getScreenResolution()
+	--AGTargetingRender(vehID, 0)-------------------------AG Targeting System
 	
 	if math.abs(vY) > 180 then vY =  vY - 360 end
 	if math.abs(vR) > 90 then 
@@ -2665,7 +2671,7 @@ end
 
 function UpdateTimers()
 	if (os.clock() - AudioTimer) > AudioMax then
-		AudioTimer = os.clock()--socket.gettime()
+		AudioTimer = os.clock()
 		IsAudioAvaliable = true
 	else
 	end
@@ -2924,8 +2930,16 @@ function GetVehicleData(vehID)
 	return data
 end
 
+function IsPlayersVehicle(vehid)
+	local playerVeh = storeCarCharIsInNoSave(PLAYER_PED)
+	if playerVeh == vehid then return true
+	else return false
+	end
+end
+
 function GetVehPos(playerData, vehicle)
 	if not doesVehicleExist(vehicle) then return end
+	if IsPlayersVehicle(vehicle) then return end
 	if vehicle == vehID then return end
 	local cvID, modelID
 	cvID = sampGetVehicleIdByCarHandle(vehicle)
@@ -3051,9 +3065,9 @@ function AGTargetingRender(vehID, bombCruizeSpeed)
 	if Lang_Eng then
 		bombSpeed = bombSpeed * 1.210
 	else
-		bombSpeed = bombSpeed * 1.395
+		bombSpeed = bombSpeed * 1.395--1.45
 	end
-	bombCruizeSpeed = bombSpeed 
+	bombCruizeSpeed = bombSpeed --* 1.7
 	
 	local bombPitch = getCarPitch(vehID)
 	if bombPitch > 180 then bombPitch = bombPitch-360 end
@@ -3085,9 +3099,7 @@ function AGTargetingRender(vehID, bombCruizeSpeed)
 	while (targetZ > getGroundZFor3dCoord(targetX, targetY, targetZ+0.5)+1 and targetZ > -20 and i < 400) do
 		i = i + 0.1
 		bombPitch = math.atan2(bombSpeed, bombCruizeSpeed)
-		
 		bombSpeed = bombSpeed - 9.81
-		
 		targetZ = posZ + ((bombSpeed * math.sin(math.rad(-dropPitch)) - ((9.81 * math.pow(i, 2))/2)))
 		
 		V0x = math.cos(math.rad(dropPitch)) * bombCruizeSpeed--dropPitch
@@ -3095,8 +3107,6 @@ function AGTargetingRender(vehID, bombCruizeSpeed)
 		
 		targetX = posX + math.sin(math.rad(AZ)) * projectionXt
  		targetY = posY + math.cos(math.rad(AZ)) * projectionXt
-		
-		
 		
 		if (i > 1.5) then
 			local isVisiblePoint = isLineOfSightClear(posx, posY, posZ, targetX, targetY, targetZ, true, false, false, false, false) 
@@ -3494,6 +3504,7 @@ end
 function UpdateStatusModed(vehID)
 	if settings.maincfg.AvionicsMode == 0 then--0 - Навигация 1 - БВБ 2 - Земля 3 - ДВБ 4 - Посадка
 		IsRadarEnabled = false
+		if not(vehTarget == -1) then restoreTargetPlane() end
 	elseif settings.maincfg.AvionicsMode == 1 then--БВБ
 		UpdateTargets(vehID)
 		IsRadarEnabled = true
@@ -3840,7 +3851,7 @@ end
 
 function ConvertTextDrawCoordinatesToScreen(X, Y, SX, SY)
 	local rX = CentralPosX+((X-315) * 2.75)
-	local rY = Y * 2.4
+	local rY = Y * 2.4--2.42
 	return rX, rY
 end
 
@@ -3931,6 +3942,7 @@ end
 
 function sampev.onMarkersSync(markers)
 	if settings.maincfg.AvionicsMode == 3 then
+		--local vector3d = require 'vector3d'
 		local playerid, isActiveMarker, pos
 		ClearMarkersData()
 		for i = 1, #markers do
@@ -4061,8 +4073,10 @@ function LoadFile_CMD(arg)
 	end
 	local wpData = safp.Load(path)
 	print("Loading flight plan:\n\"", path, "\"")
+	--getWorkingDirectory() .. "\\resource\\avionics\\flightplan\\Default.safp")
 	
 	for i = 1, #safp.Waypoints do
+		-- print("Adding WPT from file: ", safp.Waypoints[i].pos.x, safp.Waypoints[i].pos.y, safp.Waypoints[i].pos.z)
 		AddPPM_CMD(string.format("%.2f %.2f %.2f", safp.Waypoints[i].pos.x, safp.Waypoints[i].pos.y, safp.Waypoints[i].pos.z))
 	end
 end
