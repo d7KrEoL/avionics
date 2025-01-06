@@ -29,11 +29,11 @@ This script allows displaying basic flight parameters, auxiliary information for
 
 ---
 
-# [Download the latest version](https://github.com/d7KrEoL/avionics/releases/download/0.1.6/ViRPiL_Avionics_v0.1.6-beta.0509.1.zip)
+# [Download the latest version](https://github.com/d7KrEoL/avionics/releases/latest/download/autoupdate.zip)
 
 ---
 
-# [Script Usage Documentation (WIKI)](https://github.com/d7KrEoL/avionics/blob/main/Readme/Wiki/WIKI.md)
+# [Script Usage Documentation (WIKI)](https://github.com/d7KrEoL/avionics/wiki)
 
 ---
 
