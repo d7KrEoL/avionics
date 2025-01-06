@@ -1,11 +1,23 @@
 --Now it's best time to public this script, cz I will not have enough time to update it. Maybe It can be usefull for someone. Will be appreciate for any code corrections/additions for this repo.
 --В ближайшее время не будет времени заниматься этим скриптом, поэтому думаю самое время выложить его в общий доступ, может быть кому-нибудь пригодится. Буду рад разумным оптимизациям/модификациям.
 ----------------------------------------------------------------------------------------------------------------------------------------
+--TODO ver. 0.1.7 - release:
+--Fix known bugs: 
+--[1. ENG HUD bug], 
+--[2. Color update when change D/N HUD mode], 
+--[3. IsRadioFullyOff (OnVehicleEnter)],
+--?*[4. Wrong OnFoot indication when staying on custom mapping],
+--Landing glidepath linear difference indicator (oo|oo')
+--Self-update system
+--Better speed vector render on gta mini-map (multiline from aircraft pos like boeing do) - for current aircraft and target aircraft
+----------------------------------------------------------------------------------------------------------------------------------------
 
 require 'moonloader'
 require 'sampfuncs'
 
 sampev = require 'lib.samp.events'
+
+--require 'samp/events/core'
 
 local as_action = require('moonloader').audiostream_state
 local safp = require 'safp'
@@ -27,7 +39,7 @@ local SPO_IsAutoFlaresKeyNeeded
 local Iteration = 0
 local STime
 
-local Ver = "0.1.7-beta.3009"
+local Ver = "0.1.7-beta.3112"
 
 script_name("SW_Avionics")
 script_author("d7.KrEoL")
@@ -38,29 +50,32 @@ script_description("Скрипт авионики для ЛА.")
 local settings = inicfg.load(
         {
           maincfg = {
-            	IsNightMode=false,--Режим интерфейса "ночь"
-		IsAutoLeave=false,--Автопокидание
-		IsAutoFlares=false,--АвтоЛТЦ
-		IsHUDEnabled = true,--Включена ли сетка ИЛС
-		IsRadioEnabled = false,--Включено ли радио
-		IsRadioFullyOff = false,--Полное отключение радио (TODO добавить автоотключение при входе в ТС, при активном данном параметре)
-		IsSpoEnabled = true,--Система предупреждения об угрозе
-		IsBETTYDefault = true,--Речевой информатор по умолчанию для неизвестных ЛА
-		IsTargetInputActive = true,--Получение целеуказания из чата
-		IsShowMessage = true,--Показ сообщения при посадке в технику
-		IsBallisticBombRender = true, -- Отображение баллистического вычислителя (бомбы) в режиме воздух-земля
-		IsBallisticGunRender = false, -- Отображение балистического вычислителя (пушка) в режиме воздух-земля
-		AvionicsMode=0,--0 не отображать, 1 воздух-воздух, 2 воздух-земля
-		OffcetX=0,--Оффсет для ИЛС
-		OffcetY=0,--Оффсет для ИЛС
-		ZoomFix=10,--Скорость приближения камеры
-		DangerAlt = 20,--Опасная высота
-		PrevWPTKey=tonumber(keys.VK_OEM_4),--Бинд клавиши предыдущего ППМ
-		NextWPTKey=tonumber(keys.VK_OEM_6),--Бинд клавиши следующего ППМ
-		DropLockKey=tonumber(keys.VK_BACK),--Бинд клавиши сброса захвата
-		NextModeKey=tonumber(keys.VK_3),--Бинд клавиши следующего режима
-		PrevModeKey=tonumber(keys.VK_1),--Бинд клавиши предыдущего режима
-		OpenMenuKey=tonumber(keys.VK_4)--Бинд клавиши показа меню
+            IsNightMode=false,--Режим интерфейса "ночь"
+			IsAutoLeave=false,--Автопокидание
+			IsAutoFlares=false,--АвтоЛТЦ
+			IsHUDEnabled = true,--Включена ли сетка ИЛС
+			IsRadioEnabled = false,--Включено ли радио
+			IsRadioFullyOff = false,--Полное отключение радио (TODO добавить автоотключение при входе в ТС, при активном данном параметре)
+			IsSpoEnabled = true,--Система предупреждения об угрозе
+			IsBETTYDefault = true,--Речевой информатор по умолчанию для неизвестных ЛА
+			IsTargetInputActive = true,--Получение целеуказания из чата
+			IsShowMessage = true,--Показ сообщения при посадке в технику
+			IsBallisticBombRender = true, -- Отображение баллистического вычислителя (бомбы) в режиме воздух-земля
+			IsBallisticGunRender = false, -- Отображение балистического вычислителя (пушка) в режиме воздух-земля
+			Localization = "Russian.txt",
+			BombBallisticRU = 1.395,
+			BombBallisticEN = 1.210,
+			AvionicsMode=0,--0 не отображать, 1 воздух-воздух, 2 воздух-земля
+			OffcetX=0,--Оффсет для ИЛС
+			OffcetY=0,--Оффсет для ИЛС
+			ZoomFix=10,--Скорость приближения камеры
+			DangerAlt = 20,--Опасная высота
+			PrevWPTKey=tonumber(keys.VK_OEM_4),--Бинд клавиши предыдущего ППМ
+			NextWPTKey=tonumber(keys.VK_OEM_6),--Бинд клавиши следующего ППМ
+			DropLockKey=tonumber(keys.VK_BACK),--Бинд клавиши сброса захвата
+			NextModeKey=tonumber(keys.VK_3),--Бинд клавиши следующего режима
+			PrevModeKey=tonumber(keys.VK_1),--Бинд клавиши предыдущего режима
+			OpenMenuKey=tonumber(keys.VK_4)--Бинд клавиши показа меню
           },
         },
         "avionics"
@@ -73,6 +88,11 @@ local encoding = require 'encoding'
 encoding.default = 'CP1251'
 local MainWindow = imgui.ImBool(false)
 
+if Lang_Eng then
+	GUI_KeyInput_BombBallistic = imgui.ImFloat(settings.maincfg.BombBallisticEN)
+else
+	GUI_KeyInput_BombBallistic = imgui.ImFloat(settings.maincfg.BombBallisticRU)
+end
 local GUI_KeyInput_DangerAlt = imgui.ImInt(settings.maincfg.DangerAlt)
 local GUI_KeyInput_PrevWPT = imgui.ImInt(settings.maincfg.PrevWPTKey)
 local GUI_KeyInput_NextWPT = imgui.ImInt(settings.maincfg.NextWPTKey)
@@ -84,6 +104,10 @@ local GUI_KeyInput_OpenMenu = imgui.ImInt(settings.maincfg.OpenMenuKey)
 -----------------
 
 local Lang_Eng
+local Messages = {}
+local Languages
+local SelectedLanguage
+
 local PrevX
 local PrevY
 local PrevZ
@@ -226,6 +250,7 @@ function main()
 
 	repeat wait(0) until isSampLoaded()
 	--repeat wait(0) until isSampAvailable()
+	print("Loading avionics script")
 	
 	InitVars()
 	InitGUI()
@@ -242,6 +267,7 @@ end
 
 ------------------------------------------------------#region #INIT
 function InitVars()
+	InitLocalization()
 	IsAvionicsActive = true
 	Iteration = 100
 	STime = os.clock()--socket.gettime()
@@ -345,6 +371,78 @@ end
 
 function InitGlobalsLNDMode()
 	
+end
+
+function InitLocalization()
+	Languages = GetLocalizationFiles()
+	ReloadLocalization()
+	SelectedLanguage = imgui.ImInt(0)
+end
+
+function ReloadLocalization()
+	ClearLocalizationData()
+	LoadLocalizationFile(settings.maincfg.Localization)
+end
+
+function LoadLocalizationFile(path)
+	path = getGameDirectory() .. "\\moonloader\\resource\\avionics\\localization\\" .. path
+	return GetFileDataLines(path)
+end
+
+function ClearLocalizationData()
+	if Messages == nil then return end
+	for i in ipairs(Messages) do
+		Messages[i] = nil;
+	end
+	Messages = {}
+end
+
+function RestoreLocalizationContainer()
+	if Messages == nil then Messages = {} end
+end
+
+function GetFileDataLines(path)
+	print("Trying to load localization data from file: ", path)
+	RestoreLocalizationContainer()
+	if not doesFileExist(path) then print("Localization file does not exist: ", path) return {} end
+	local i = 0
+	for line in io.lines(path) do
+		print("Messages[", i, "] - ", line)
+		i = i + 1
+		table.insert(Messages, line)
+	end
+end
+
+function GetLocalizationMessage(index)
+	if Messages == nil then return "ERR: NO LOCALIZATION FOUND" end
+	if index > #Messages then return "ERR: MESSAGE " .. index .. " - LOCALIZATION FILE HAVE ONLY " .. #Messages .. " ELEMENTS" end
+	if Messages[index] == nil then 
+		print("{FF0000}----------------------------")
+		print("Debug localization messages:")
+		for i = 0, #Messages do
+			print("Messages[", i, "] - ", Messages[i])
+		end
+		print("{FF0000}----------------------------")
+		return encoding.UTF8("ERR: NO LOCALIZATION MESSAGE FOUND AT INDEX: ") .. index
+
+	end
+	return Messages[index]
+end
+
+function GetLocalizationFiles()
+	require'lfs'
+	local filenames = {}
+	for folder in lfs.dir(getGameDirectory() .. '\\moonloader\\resource\\avionics\\localization\\') do
+		if lfs.attributes(folder,"mode") == "directory" and folder ~= '..'  then 
+			for file in lfs.dir(getGameDirectory() .. '\\moonloader\\resource\\avionics\\localization\\' .. folder) do
+				 if file ~= '.' and file ~= '..' then
+					 table.insert(filenames, file)
+					 print("found localization file: " .. file)
+				end
+			end
+		end
+    end
+    return filenames
 end
 
 
@@ -456,7 +554,9 @@ end
 
 function onUpdateFirstRender(vehID)
 	if settings.maincfg.IsShowMessage then
-		sampAddChatMessage("{00A2FF}V{FFFFFF}ir{00A2FF}P{FFFFFF}i{00A2FF}L {FFFFFF}Avionics. Чтобы открыть меню ИЛС введите {00A2FF}/swavionics", 0xFFFFFFFF)
+		-- sampAddChatMessage("{00A2FF}V{FFFFFF}ir{00A2FF}P{FFFFFF}i{00A2FF}L {FFFFFF}Avionics. Чтобы открыть меню ИЛС введите {00A2FF}/swavionics", 0xFFFFFFFF)
+		-- print(GetLocalizationMessage(1))
+		sampAddChatMessage(GetLocalizationMessage(1), 0xFFFFFFFF)
 	end
 	IsPlaneRendered = true
 	if settings.maincfg.IsBETTYDefault then
@@ -512,22 +612,45 @@ function GUI_DrawMainMenu()
 	local strCur
 	local GUI_ZoomSpd = imgui.ImInt(settings.maincfg.ZoomFix)
 
-	-- center
+	-- for i, v in ipairs(Languages) do
+		-- if imgui.MenuItem(v, imgui.ImVec2(100, 0)) then
+			-- print(v, " is chosen")
+			-- settings.maincfg.Localization = v
+			-- LoadLocalizationFile(v)
+			-- inicfg.save(settings, "avionics")
+		-- end
+	-- end
+	-- imgui.PushItemHeight(50)
+	
+	-- imgui.PopItemHeight()
+
 	imgui.SetNextWindowPos(imgui.ImVec2(CentralPosX-(sX*0.28), CentralPosY), imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5))
-	imgui.SetNextWindowSize(imgui.ImVec2(455, 580), imgui.Cond.FirstUseEver)
+	imgui.SetNextWindowSize(imgui.ImVec2(455, 700), imgui.Cond.FirstUseEver)
 	imgui.Begin(WinStr, show_main_window, imgui.WindowFlags.NoResize)
 	
-	imgui.SetCursorPosX(imgui.GetWindowWidth()/2-35)
+	if imgui.ListBox(encoding.UTF8(GetLocalizationMessage(2)), SelectedLanguage, Languages, 2) then
+		-- print(Languages[SelectedLanguage.v + 1], "is selected")
+		settings.maincfg.Localization = Languages[SelectedLanguage.v + 1]
+		inicfg.save(settings, "avionics")
+		ReloadLocalization()
+	end
 	
-	imgui.Text(encoding.UTF8"-Системы-")
-	strCur = encoding.UTF8(string.format("HUD: %s", GUI_Func_CheckBoolStr(settings.maincfg.IsHUDEnabled)))
+	-- imgui.SetCursorPosX(imgui.GetWindowWidth()/2-35)
+	-- imgui.Text(encoding.UTF8"-Language-")
+	
+	-- if imgui.CollapsingHeader(encoding.UTF8'Язык') then
+	-- end
+	
+	
+	imgui.SetCursorPosX(imgui.GetWindowWidth()/2-35)
+	imgui.Text(encoding.UTF8(GetLocalizationMessage(3)))
+	strCur = encoding.UTF8(string.format(encoding.UTF8(GetLocalizationMessage(4)), GUI_Func_CheckBoolStr(settings.maincfg.IsHUDEnabled)))
 	if imgui.Button(strCur, imgui.ImVec2(100, 0)) then
 		settings.maincfg.IsHUDEnabled = not settings.maincfg.IsHUDEnabled
 		inicfg.save(settings, "avionics")
 	end
 	
-	
-	strCur = encoding.UTF8(string.format("Режим: %s", GUI_Func_CheckRadarStr(settings.maincfg.AvionicsMode)))
+	strCur = encoding.UTF8(string.format(GetLocalizationMessage(5), GUI_Func_CheckRadarStr(settings.maincfg.AvionicsMode)))
 	imgui.SameLine() if imgui.Button(strCur, imgui.ImVec2(100, 0)) then
 		if settings.maincfg.AvionicsMode > 2 then
 			settings.maincfg.AvionicsMode = 0
@@ -543,13 +666,13 @@ function GUI_DrawMainMenu()
 		inicfg.save(settings, "avionics")
 	end
 	
-	strCur = encoding.UTF8(string.format("Радио: %s", GUI_Func_CheckBoolStr(settings.maincfg.IsRadioEnabled)))
+	strCur = encoding.UTF8(string.format(GetLocalizationMessage(6), GUI_Func_CheckBoolStr(settings.maincfg.IsRadioEnabled)))
 	imgui.SameLine() if imgui.Button(strCur, imgui.ImVec2(100, 0)) then
 		settings.maincfg.IsRadioEnabled = not settings.maincfg.IsRadioEnabled
 		inicfg.save(settings, "avionics")
 	end
 	
-	strCur = encoding.UTF8(string.format("Радио 2: %s", GUI_Func_CheckBoolStr(settings.maincfg.IsRadioFullyOff)))
+	strCur = encoding.UTF8(string.format(GetLocalizationMessage(7), GUI_Func_CheckBoolStr(settings.maincfg.IsRadioFullyOff)))
 	imgui.SameLine() if imgui.Button(strCur, imgui.ImVec2(100, 0)) then
 		settings.maincfg.IsRadioFullyOff = not settings.maincfg.IsRadioFullyOff
 		local memory = require 'memory'
@@ -565,38 +688,37 @@ function GUI_DrawMainMenu()
 		inicfg.save(settings, "avionics")
 	end
 	
-	strCur = encoding.UTF8(string.format("Автопокидание: %s", GUI_Func_CheckBoolStr(settings.maincfg.IsAutoLeave)))
+	strCur = encoding.UTF8(string.format(GetLocalizationMessage(8), GUI_Func_CheckBoolStr(settings.maincfg.IsAutoLeave)))
 	if imgui.Button(strCur, imgui.ImVec2(150, 0)) then
 		settings.maincfg.IsAutoLeave = not settings.maincfg.IsAutoLeave
 		inicfg.save(settings, "avionics")
 	end
 	
-	strCur = encoding.UTF8(string.format("СПО: %s", GUI_Func_CheckBoolStr(settings.maincfg.IsSpoEnabled)))
+	strCur = encoding.UTF8(string.format(GetLocalizationMessage(9), GUI_Func_CheckBoolStr(settings.maincfg.IsSpoEnabled)))
 	imgui.SameLine() if imgui.Button(strCur, imgui.ImVec2(100, 0)) then
 		settings.maincfg.IsSpoEnabled = not settings.maincfg.IsSpoEnabled
 		inicfg.save(settings, "avionics")
 	end
 	
-	strCur = encoding.UTF8(string.format("Приём целеуказ.: %s", GUI_Func_CheckBoolStr(settings.maincfg.IsTargetInputActive)))
+	strCur = encoding.UTF8(string.format(GetLocalizationMessage(10), GUI_Func_CheckBoolStr(settings.maincfg.IsTargetInputActive)))
 	imgui.SameLine() if imgui.Button(strCur, imgui.ImVec2(157, 0)) then
 		SwitchTargetInput()
 		inicfg.save(settings, "avionics")
 	end
 	
-	strCur = encoding.UTF8(string.format("Авто-ЛТЦ: %s", GUI_Func_CheckBoolStr(settings.maincfg.IsAutoFlares)))
+	strCur = encoding.UTF8(string.format(GetLocalizationMessage(11), GUI_Func_CheckBoolStr(settings.maincfg.IsAutoFlares)))
 	if imgui.Button(strCur, imgui.ImVec2(100, 0)) then
 		settings.maincfg.IsAutoFlares = not settings.maincfg.IsAutoFlares
 		inicfg.save(settings, "avionics")
 	end
 	
-	strCur = encoding.UTF8(string.format("Отображение HUD: %s", GUI_Func_CheckBoolStr(IsAvionicsActive)))
+	strCur = encoding.UTF8(string.format(GetLocalizationMessage(12), GUI_Func_CheckBoolStr(IsAvionicsActive)))
 	imgui.SameLine() 
 	if imgui.Button(strCur, imgui.ImVec2(170, 0)) then
 		IsAvionicsActive = not IsAvionicsActive
 	end
-	
-	
-	strCur = encoding.UTF8(string.format("Инф. сообщ.: %s", GUI_Func_CheckBoolStr(settings.maincfg.IsShowMessage)))
+		
+	strCur = encoding.UTF8(string.format(GetLocalizationMessage(13), GUI_Func_CheckBoolStr(settings.maincfg.IsShowMessage)))
 	imgui.SameLine() 
 	if imgui.Button(strCur, imgui.ImVec2(140, 0)) then
 		settings.maincfg.IsShowMessage = not settings.maincfg.IsShowMessage
@@ -605,25 +727,51 @@ function GUI_DrawMainMenu()
 	
 	imgui.NewLine()
 	imgui.SetCursorPosX(imgui.GetWindowWidth()/2-90)
-	imgui.Text(encoding.UTF8"-Баллистические вычислители-")
+	imgui.Text(encoding.UTF8(GetLocalizationMessage(14)))
 	imgui.NewLine()
-	strCur = encoding.UTF8(string.format("ЗМЛ-Бомба: %s", GUI_Func_CheckBoolStr(settings.maincfg.IsBallisticBombRender)))
+	strCur = encoding.UTF8(string.format(GetLocalizationMessage(15), GUI_Func_CheckBoolStr(settings.maincfg.IsBallisticBombRender)))
 	if imgui.Button(strCur, imgui.ImVec2(70, 0)) then
 		settings.maincfg.IsBallisticBombRender = not settings.maincfg.IsBallisticBombRender
 		inicfg.save(settings, "avionics")
 	end
 	imgui.SameLine()
-	strCur = encoding.UTF8(string.format("ЗМЛ-Пушка: %s", GUI_Func_CheckBoolStr(settings.maincfg.IsBallisticGunRender)))
+	strCur = encoding.UTF8(string.format(GetLocalizationMessage(16), GUI_Func_CheckBoolStr(settings.maincfg.IsBallisticGunRender)))
 	if imgui.Button(strCur, imgui.ImVec2(70, 0)) then
 		settings.maincfg.IsBallisticGunRender = not settings.maincfg.IsBallisticGunRender
+		inicfg.save(settings, "avionics")
+	end
+	-- imgui.NewLine()
+	-- imgui.SameLine()
+	imgui.GetStyle().Colors[imgui.Col.Button] = imgui.ImVec4(0.65,0.0,0.0,0.5)
+	imgui.Text(string.format(encoding.UTF8(GetLocalizationMessage(17)), Lang_Eng and encoding.UTF8(GetLocalizationMessage(18)) or encoding.UTF8(GetLocalizationMessage(19))))
+	imgui.PushItemWidth(150)
+	imgui.InputFloat(encoding.UTF8(GetLocalizationMessage(20)), GUI_KeyInput_BombBallistic) 
+	imgui.PopItemWidth()
+	if imgui.Button(encoding.UTF8(GetLocalizationMessage(21)), imgui.ImVec2(200, 0)) then
+		if Lang_Eng then
+			settings.maincfg.BombBallisticEN = tonumber(GUI_KeyInput_BombBallistic.v)
+		else
+			settings.maincfg.BombBallisticRU = tonumber(GUI_KeyInput_BombBallistic.v)
+		end
+		inicfg.save(settings, "avionics")
+	end
+	imgui.SameLine()
+	if imgui.Button(encoding.UTF8(GetLocalizationMessage(22)), imgui.ImVec2(200, 0)) then
+		if Lang_Eng then
+			settings.maincfg.BombBallisticEN = 1.210
+			GUI_KeyInput_BombBallistic.v = settings.maincfg.BombBallisticEN
+		else
+			settings.maincfg.BombBallisticRU = 1.395
+			GUI_KeyInput_BombBallistic.v = settings.maincfg.BombBallisticRU
+		end
 		inicfg.save(settings, "avionics")
 	end
 	
 	imgui.NewLine()
 	imgui.GetStyle().Colors[imgui.Col.Button] = imgui.ImVec4(0.65,0.0,0.0,0.5)
-	imgui.Text(encoding.UTF8"Задатчик опасной высоты")
-	imgui.InputInt(encoding.UTF8"(м), радиовысотомер", GUI_KeyInput_DangerAlt) 
-	if imgui.Button(encoding.UTF8"Применить (задать высоту)", imgui.ImVec2(200, 0)) then
+	imgui.Text(encoding.UTF8(GetLocalizationMessage(23)))
+	imgui.InputInt(encoding.UTF8(GetLocalizationMessage(24)), GUI_KeyInput_DangerAlt) 
+	if imgui.Button(encoding.UTF8(GetLocalizationMessage(25)), imgui.ImVec2(200, 0)) then
 		
 		settings.maincfg.DangerAlt = tonumber(GUI_KeyInput_DangerAlt.v)
 		inicfg.save(settings, "avionics")
@@ -631,92 +779,92 @@ function GUI_DrawMainMenu()
 	
 	imgui.NewLine()
 	imgui.SetCursorPosX(imgui.GetWindowWidth()/2-40)
-	imgui.Text(encoding.UTF8"-Настройки-")
-	imgui.Text(encoding.UTF8"!Низкие значения могут привести к уходу в Loading!")
-	if imgui.SliderInt(encoding.UTF8"Скорость приближения", GUI_ZoomSpd, 10, 1000) then
+	imgui.Text(encoding.UTF8(GetLocalizationMessage(26)))
+	imgui.Text(encoding.UTF8(GetLocalizationMessage(27)))
+	if imgui.SliderInt(encoding.UTF8(GetLocalizationMessage(28)), GUI_ZoomSpd, 10, 1000) then
 		settings.maincfg.ZoomFix = GUI_ZoomSpd.v
 	end
 	imgui.NewLine()
 	
-	if imgui.CollapsingHeader(encoding.UTF8"Клавиши управления") then
+	if imgui.CollapsingHeader(encoding.UTF8(GetLocalizationMessage(29))) then
 		local ffi = require('ffi')
 		imgui.NewLine()
-		imgui.Text(encoding.UTF8"Введите коды клавиш в поля ниже.\nУзнать коды клавиш можно в файле moonloader/lib/vkeys")
+		imgui.Text(encoding.UTF8(GetLocalizationMessage(30) .. '\n' .. GetLocalizationMessage(31)))
 		imgui.NewLine()
 		imgui.Text(encoding.UTF8"--------------------------------------------------------------------------------------")
 		
-		curStr = string.format(encoding.UTF8"Текущая клавиша: %s", keys.id_to_name(settings.maincfg.PrevWPTKey))
+		curStr = string.format(encoding.UTF8(GetLocalizationMessage(32)), keys.id_to_name(settings.maincfg.PrevWPTKey))
 		imgui.Text(curStr)
 		imgui.SameLine()
 		imgui.SetCursorPosX(imgui.GetWindowWidth()/2)
-		if imgui.Button(encoding.UTF8"Переназначить (пред. ППМ)", imgui.ImVec2(180, 0)) then
+		if imgui.Button(encoding.UTF8(GetLocalizationMessage(33)), imgui.ImVec2(180, 0)) then
 			lua_thread.create(function()
 				settings.maincfg.PrevWPTKey = tonumber(ProcessClientInput())
-				sampAddChatMessage(string.format("[Avionics]: клавиша теперь назначена на: %i (%s)", settings.maincfg.PrevWPTKey, keys.id_to_name(settings.maincfg.PrevWPTKey)), -1)
+				sampAddChatMessage(string.format(GetLocalizationMessage(34), settings.maincfg.PrevWPTKey, keys.id_to_name(settings.maincfg.PrevWPTKey)), -1)
 				inicfg.save(settings, "avionics")
 				end)
 		end
 		
 		imgui.Text(encoding.UTF8"--------------------------------------------------------------------------------------")
-		curStr = string.format(encoding.UTF8"Текущая клавиша: %s", keys.id_to_name(settings.maincfg.NextWPTKey))
+		curStr = string.format(encoding.UTF8(GetLocalizationMessage(32)), keys.id_to_name(settings.maincfg.NextWPTKey))
 		imgui.Text(curStr)
 		imgui.SameLine()
 		imgui.SetCursorPosX(imgui.GetWindowWidth()/2)
-		if imgui.Button(encoding.UTF8"Переназначить (след. ППМ)", imgui.ImVec2(180, 0)) then
+		if imgui.Button(encoding.UTF8(GetLocalizationMessage(35)), imgui.ImVec2(180, 0)) then
 			lua_thread.create(function()
 				settings.maincfg.NextWPTKey = tonumber(ProcessClientInput())
-				sampAddChatMessage(string.format("[Avionics]: клавиша теперь назначена на: %i (%s)", settings.maincfg.NextWPTKey, keys.id_to_name(settings.maincfg.NextWPTKey)), -1)
+				sampAddChatMessage(string.format(GetLocalizationMessage(34), settings.maincfg.NextWPTKey, keys.id_to_name(settings.maincfg.NextWPTKey)), -1)
 				inicfg.save(settings, "avionics")
 				end)
 		end
 		
 		imgui.Text(encoding.UTF8"--------------------------------------------------------------------------------------")
-		curStr = string.format(encoding.UTF8"Текущая клавиша: %s", keys.id_to_name(settings.maincfg.PrevModeKey))
+		curStr = string.format(encoding.UTF8(GetLocalizationMessage(32)), keys.id_to_name(settings.maincfg.PrevModeKey))
 		imgui.Text(curStr)
 		imgui.SameLine()
 		imgui.SetCursorPosX(imgui.GetWindowWidth()/2)
-		if imgui.Button(encoding.UTF8"Переназначить (пред. реж.)", imgui.ImVec2(180, 0)) then
+		if imgui.Button(encoding.UTF8(GetLocalizationMessage(36)), imgui.ImVec2(180, 0)) then
 			lua_thread.create(function()
 				settings.maincfg.PrevModeKey = tonumber(ProcessClientInput())
-				sampAddChatMessage(string.format("[Avionics]: клавиша теперь назначена на: %i (%s)", settings.maincfg.PrevModeKey, keys.id_to_name(settings.maincfg.PrevModeKey)), -1)
+				sampAddChatMessage(string.format(GetLocalizationMessage(34), settings.maincfg.PrevModeKey, keys.id_to_name(settings.maincfg.PrevModeKey)), -1)
 				inicfg.save(settings, "avionics")
 				end)
 		end
 		
 		imgui.Text(encoding.UTF8"--------------------------------------------------------------------------------------")
-		curStr = string.format(encoding.UTF8"Текущая клавиша: %s", keys.id_to_name(settings.maincfg.NextModeKey))
+		curStr = string.format(encoding.UTF8(GetLocalizationMessage(32)), keys.id_to_name(settings.maincfg.NextModeKey))
 		imgui.Text(curStr)
 		imgui.SameLine()
 		imgui.SetCursorPosX(imgui.GetWindowWidth()/2)
-		if imgui.Button(encoding.UTF8"Переназначить (след. реж.)", imgui.ImVec2(180, 0)) then
+		if imgui.Button(encoding.UTF8(GetLocalizationMessage(37)), imgui.ImVec2(180, 0)) then
 			lua_thread.create(function()
 				settings.maincfg.NextModeKey = tonumber(ProcessClientInput())
-				sampAddChatMessage(string.format("[Avionics]: клавиша теперь назначена на: %i (%s)", settings.maincfg.NextModeKey, keys.id_to_name(settings.maincfg.NextModeKey)), -1)
+				sampAddChatMessage(string.format(GetLocalizationMessage(34), settings.maincfg.NextModeKey, keys.id_to_name(settings.maincfg.NextModeKey)), -1)
 				inicfg.save(settings, "avionics")
 				end)
 		end
 		
 		imgui.Text(encoding.UTF8"--------------------------------------------------------------------------------------")
-		curStr = string.format(encoding.UTF8"Текущая клавиша: %s", keys.id_to_name(settings.maincfg.DropLockKey))
+		curStr = string.format(encoding.UTF8(GetLocalizationMessage(32)), keys.id_to_name(settings.maincfg.DropLockKey))
 		imgui.Text(curStr)
 		imgui.SameLine()
 		imgui.SetCursorPosX(imgui.GetWindowWidth()/2)
-		if imgui.Button(encoding.UTF8"Переназначить (сброс захв.)", imgui.ImVec2(180, 0)) then
+		if imgui.Button(encoding.UTF8(GetLocalizationMessage(38)), imgui.ImVec2(180, 0)) then
 			lua_thread.create(function()
 				settings.maincfg.DropLockKey = tonumber(ProcessClientInput())
-				sampAddChatMessage(string.format("[Avionics]: клавиша теперь назначена на: %i (%s)", settings.maincfg.DropLockKey, keys.id_to_name(settings.maincfg.DropLockKey)), -1)
+				sampAddChatMessage(string.format(GetLocalizationMessage(34), settings.maincfg.DropLockKey, keys.id_to_name(settings.maincfg.DropLockKey)), -1)
 				inicfg.save(settings, "avionics")
 				end)
 		end
 		imgui.Text(encoding.UTF8"--------------------------------------------------------------------------------------")
-		curStr = string.format(encoding.UTF8"Текущая клавиша: %s", keys.id_to_name(settings.maincfg.OpenMenuKey))
+		curStr = string.format(encoding.UTF8(GetLocalizationMessage(32)), keys.id_to_name(settings.maincfg.OpenMenuKey))
 		imgui.Text(curStr)
 		imgui.SameLine()
 		imgui.SetCursorPosX(imgui.GetWindowWidth()/2)
-		if imgui.Button(encoding.UTF8"Переназначить (меню)", imgui.ImVec2(180, 0)) then
+		if imgui.Button(encoding.UTF8(GetLocalizationMessage(39)), imgui.ImVec2(180, 0)) then
 			lua_thread.create(function()
 				settings.maincfg.OpenMenuKey = tonumber(ProcessClientInput())
-				sampAddChatMessage(string.format("[Avionics]: клавиша теперь назначена на: %i (%s)", settings.maincfg.PrevWPTKey, keys.id_to_name(settings.maincfg.PrevWPTKey)), -1)
+				sampAddChatMessage(string.format(GetLocalizationMessage(34), settings.maincfg.PrevWPTKey, keys.id_to_name(settings.maincfg.PrevWPTKey)), -1)
 				inicfg.save(settings, "avionics")
 				end)
 		end
@@ -724,8 +872,8 @@ function GUI_DrawMainMenu()
 	end
 	
 	---------------------------------------------------
-	if imgui.CollapsingHeader(encoding.UTF8'Настройки окна меню') then
-		if imgui.Checkbox(encoding.UTF8'Не скрывать в меню паузы', cb_render_in_menu) then
+	if imgui.CollapsingHeader(encoding.UTF8(GetLocalizationMessage(40))) then
+		if imgui.Checkbox(encoding.UTF8(GetLocalizationMessage(41)), cb_render_in_menu) then
 			imgui.RenderInMenu = cb_render_in_menu.v
 		end
 	end
@@ -736,10 +884,10 @@ function GUI_DrawMainMenu()
 	imgui.NewLine()
 	if settings.maincfg.IsNightMode then 
 		imgui.GetStyle().Colors[imgui.Col.Button] = imgui.ImVec4(0.0,0.64,1.0,0.5)
-		strCur = encoding.UTF8"Цвет: ночь"
+		strCur = encoding.UTF8(GetLocalizationMessage(42))
 	else
 		imgui.GetStyle().Colors[imgui.Col.Button] = imgui.ImVec4(0.0,0.64,1.0,0.7)
-		strCur = encoding.UTF8"Цвет: день"
+		strCur = encoding.UTF8(GetLocalizationMessage(43))
 	end
 	if imgui.Button(strCur, imgui.ImVec2(200, 0)) then
 		settings.maincfg.IsNightMode = not settings.maincfg.IsNightMode
@@ -753,22 +901,24 @@ function GUI_DrawMainMenu()
 	end
 	if Lang_Eng then
 		imgui.GetStyle().Colors[imgui.Col.Button] = imgui.ImVec4(0.0,0.64,1.0,0.7)
-		strCur = encoding.UTF8"Речевой информатор: BETTY"
+		strCur = encoding.UTF8(GetLocalizationMessage(44))
+		
 	else
 		imgui.GetStyle().Colors[imgui.Col.Button] = imgui.ImVec4(0.0,0.64,1.0,0.5)
-		strCur = encoding.UTF8"Речевой информатор: РИТА"
+		strCur = encoding.UTF8(GetLocalizationMessage(45))
 	end
 	imgui.SameLine() if imgui.Button(strCur, imgui.ImVec2(200, 0)) then
 		Lang_Eng = not Lang_Eng
+		GUI_KeyInput_BombBallistic.v = Lang_Eng and settings.maincfg.BombBallisticEN or settings.maincfg.BombBallisticRU
 		Lang_Update()
 	end
 	
 	if settings.maincfg.IsBETTYDefault then
 		imgui.GetStyle().Colors[imgui.Col.Button] = imgui.ImVec4(0.0,0.64,1.0,0.7)
-		strCur = encoding.UTF8"РИ по умолчанию: BETTY"
+		strCur = encoding.UTF8(GetLocalizationMessage(46))
 	else
 		imgui.GetStyle().Colors[imgui.Col.Button] = imgui.ImVec4(0.0,0.64,1.0,0.5)
-		strCur = encoding.UTF8"РИ по умолчанию: РИТА"
+		strCur = encoding.UTF8(GetLocalizationMessage(47))
 	end
 	imgui.SetCursorPosX(imgui.GetWindowWidth()/2-11)
 	if imgui.Button(strCur, imgui.ImVec2(200, 0)) then
@@ -778,23 +928,33 @@ function GUI_DrawMainMenu()
 	
 	
 	imgui.NewLine()
-	if imgui.CollapsingHeader(encoding.UTF8'Список текстовых команд скрипта') then
-	imgui.Text(encoding.UTF8"Данные команды вводятся в общий чат, как обычные команды сервера:")
-	imgui.Text(encoding.UTF8"/setppm /setwpt - установить текущий ППМ")
-	imgui.Text(encoding.UTF8"/swavionics /swav /avionix - Открыть/закрыть данное меню")
-	imgui.Text(encoding.UTF8"/swcam - Перейти в контейнер целеуказания/выйти из него")
-	imgui.Text(encoding.UTF8"/swmag - (Для вертолётов) выпустить/сбросить магнит")
-	imgui.Text(encoding.UTF8"/addwpt /addppm - Добавить ППМ по координатам")
-	imgui.Text(encoding.UTF8"/clearppm /clearwpt - Очистить план полёта (удалить все ППМ)")
-	imgui.Text(encoding.UTF8"/autopilot /swapt - Включить автопилот")
-	imgui.Text(encoding.UTF8"/swapto - Отключить автопилот")
-	imgui.Text(encoding.UTF8"/wptcam /ppmcam /tarcam - Повернуть камеру контейнера целеуказания на ППМ")
-	imgui.Text(encoding.UTF8"/tarppm /tarwpt - Добавить ППМ из координат цели \n(фиксированной камеры)")
-	imgui.Text(encoding.UTF8"/vehppm /vehwpt - Добавить ППМ из текущих координат самолёта \n(собственных)")
-	imgui.Text(encoding.UTF8"/swamode /swam - Переключение режима авионики")
-	imgui.Text(encoding.UTF8"/swazoom /swaz - Изменить скорость приближения камеры")
-	imgui.Text(encoding.UTF8"/safp /ldfp - Загрузить план полёта из файла (ложить в папку\nresource/avionics/flightplan)")
-	imgui.Text(encoding.UTF8"/savefp /svfp - Сохранить план полёта в файл (будет лежать в папке\nresource/avionics/flightplan)")
+	if imgui.CollapsingHeader(encoding.UTF8(GetLocalizationMessage(48))) then
+	imgui.Text(encoding.UTF8(GetLocalizationMessage(49)))
+	imgui.Text(encoding.UTF8(GetLocalizationMessage(50)))
+	imgui.Text(encoding.UTF8(GetLocalizationMessage(51)))
+	imgui.Text(encoding.UTF8(GetLocalizationMessage(52)))
+	imgui.Text(encoding.UTF8(GetLocalizationMessage(53)))
+	imgui.Text(encoding.UTF8(GetLocalizationMessage(54)))
+	imgui.Text(encoding.UTF8(GetLocalizationMessage(55)))
+	imgui.Text(encoding.UTF8(GetLocalizationMessage(56)))
+	imgui.Text(encoding.UTF8(GetLocalizationMessage(57)))
+	imgui.Text(encoding.UTF8(GetLocalizationMessage(58)))
+	imgui.Text(encoding.UTF8(GetLocalizationMessage(59)))
+	imgui.Text(encoding.UTF8(GetLocalizationMessage(60)))
+	imgui.Text(encoding.UTF8(GetLocalizationMessage(61)))
+	imgui.Text(encoding.UTF8(GetLocalizationMessage(62)))
+	imgui.Text(encoding.UTF8(GetLocalizationMessage(63)))
+	imgui.Text(encoding.UTF8(GetLocalizationMessage(64)))
+	imgui.Text(encoding.UTF8(GetLocalizationMessage(65)))
+	imgui.Text(encoding.UTF8(GetLocalizationMessage(66)))
+	imgui.Text(encoding.UTF8(GetLocalizationMessage(67)))
+	imgui.Text(encoding.UTF8(GetLocalizationMessage(68)))
+	imgui.Text(encoding.UTF8(GetLocalizationMessage(69)))
+	imgui.Text(encoding.UTF8(GetLocalizationMessage(70)))
+	imgui.Text(encoding.UTF8(GetLocalizationMessage(71)))
+	imgui.Text(encoding.UTF8(GetLocalizationMessage(72)))
+	imgui.Text(encoding.UTF8(GetLocalizationMessage(73)))
+	imgui.Text(encoding.UTF8(GetLocalizationMessage(74)))
 	end
   
 	imgui.NewLine()
@@ -813,29 +973,29 @@ end
 function GUI_Func_CheckBoolStr(boolName)
 	if boolName then 
 		imgui.GetStyle().Colors[imgui.Col.Button] = imgui.ImVec4(0.0,0.64,0.0,0.5)
-		return "Вкл"
+		return GetLocalizationMessage(75)
 	else 
 		imgui.GetStyle().Colors[imgui.Col.Button] = imgui.ImVec4(0.65,0.0,0.0,0.5)
-		return "Откл" 
+		return GetLocalizationMessage(76)
 	end
 end
 
 function GUI_Func_CheckRadarStr(radarMode)
 	if radarMode == 0 then
 		imgui.GetStyle().Colors[imgui.Col.Button] = imgui.ImVec4(0.64,0.0,0.0,0.5)
-		return "НАВ"
+		return GetLocalizationMessage(77)
 	elseif radarMode == 1 then
 		imgui.GetStyle().Colors[imgui.Col.Button] = imgui.ImVec4(0.0,0.64,0.0,0.5)
-		return "БВБ"
+		return GetLocalizationMessage(78)
 	elseif radarMode == 2 then
 		imgui.GetStyle().Colors[imgui.Col.Button] = imgui.ImVec4(0.0,0.64,0.0,0.5)
-		return "ЗМЛ"
+		return GetLocalizationMessage(79)
 	elseif radarMode == 3 then
 		imgui.GetStyle().Colors[imgui.Col.Button] = imgui.ImVec4(0.0,0.64,0.0,0.5)
-		return "ДВБ"
+		return GetLocalizationMessage(80)
 	elseif radarMode == 4 then
 		imgui.GetStyle().Colors[imgui.Col.Button] = imgui.ImVec4(0.0,0.64,0.0,0.5)
-		return "ПОС"
+		return GetLocalizationMessage(81)
 	end
 end
 
@@ -844,7 +1004,7 @@ function GUI_Style_MainMenu()
 end
 
 function ProcessClientInput()
-	sampAddChatMessage("[Avionics]: Нажмите на нужную клавишу", -1)
+	sampAddChatMessage(GetLocalizationMessage(82), -1)
 	local NotPressed = true
 	local j = 0
 	while NotPressed do
@@ -865,18 +1025,18 @@ end
 ----------------------------------------------------------------------------------#region CMD
 function SetPPM_CMD(arg)
 	if #arg < 1 then
-			print("Синтаксис: /setppm [number]")
+			print(GetLocalizationMessage(83))
 	else
 		print(arg)
 		if (arg == "0") then
 			PPMCur = -1
-			sampAddChatMessage("{00A2FF}[Avionics]: {FFFFFF}Отображение ППМ отключено {00A2FF}(/setppm 0)", 0xFFFFFFFF)
+			sampAddChatMessage(GetLocalizationMessage(84), 0xFFFFFFFF)
 		else
 			if ((#PPMX > tonumber(arg)) or (#PPMX == tonumber(arg))) and ((#PPMY > tonumber(arg)) or (#PPMY == tonumber(arg))) then
-				sampAddChatMessage(string.format("{00A2FF}[Avionics]: {FFFFFF}Установлен ППМ №{00A2FF}%s {FFFFFF}[%s, %s]", arg, PPMX[tonumber(arg)], PPMY[tonumber(arg)]), 0xFFFFFFFF)
+				sampAddChatMessage(string.format(GetLocalizationMessage(85), arg, PPMX[tonumber(arg)], PPMY[tonumber(arg)]), 0xFFFFFFFF)
 					PPMCur = tonumber(arg)
 			else
-				sampAddChatMessage(string.format("{00A2FF}[Avionics]: Ошибка. {FFFFFF}ППМ №%s не добавлен в бортовую систему", arg), 0xFFFFFFFF)
+				sampAddChatMessage(string.format(GetLocalizationMessage(86), arg), 0xFFFFFFFF)
 			end
 		end
 	end
@@ -884,48 +1044,48 @@ end
 
 function AvionicsMode_CMD(arg)
 	if #arg < 1 then
-			print("Синтаксис: /swamode [number] (0 - НАВ, 1 - БВБ, 2 - ЗМЛ, 3 - ДВБ, 4 - ПОС)")
-			sampAddChatMessage(string.format("{00A2FF}[Avionics]: {FFFFFF}Синтаксис: /swamode [номер] (0 - Нав, 1 - БВБ, 2 - ЗМЛ, 3 - ДВБ)", arg), 0xFFFFFFFF)
+			print(GetLocalizationMessage(87))
+			sampAddChatMessage(string.format(GetLocalizationMessage(88), arg), 0xFFFFFFFF)
 	else
 		if tonumber(arg) < 5 then
 			print(arg)
 			settings.maincfg.AvionicsMode = tonumber(arg)
 			if settings.maincfg.AvionicsMode == 0 then
-				sampAddChatMessage(string.format("{00A2FF}[Avionics]: {FFFFFF}Включен режим навигации", arg), 0xFFFFFFFF)
+				sampAddChatMessage(string.format(GetLocalizationMessage(89), arg), 0xFFFFFFFF)
 			elseif settings.maincfg.AvionicsMode == 1 then
-				sampAddChatMessage(string.format("{00A2FF}[Avionics]: {FFFFFF}Включен режим ближнего воздушного боя", arg), 0xFFFFFFFF)
+				sampAddChatMessage(string.format(GetLocalizationMessage(90), arg), 0xFFFFFFFF)
 			elseif settings.maincfg.AvionicsMode == 2 then
-				sampAddChatMessage(string.format("{00A2FF}[Avionics]: {FFFFFF}Включен режим воздух-поверхность", arg), 0xFFFFFFFF)
+				sampAddChatMessage(string.format(GetLocalizationMessage(91), arg), 0xFFFFFFFF)
 			elseif settings.maincfg.AvionicsMode == 3 then
-				sampAddChatMessage(string.format("{00A2FF}[Avionics]: {FFFFFF}Включен режим дальнего воздушного боя", arg), 0xFFFFFFFF)
+				sampAddChatMessage(string.format(GetLocalizationMessage(92), arg), 0xFFFFFFFF)
 			elseif settings.maincfg.AvionicsMode == 4 then
-				sampAddChatMessage(string.format("{00A2FF}[Avionics]: {FFFFFF}Включен режим посадки", arg), 0xFFFFFFFF)
+				sampAddChatMessage(string.format(GetLocalizationMessage(93), arg), 0xFFFFFFFF)
 			elseif settings.maincfg.AvionicsMode < 0 then
-				sampAddChatMessage(string.format("{00A2FF}[Avionics]: {FFFFFF}Режим с номером '%s' не найден. Включен режим навигации", arg), 0xFFFFFFFF)
+				sampAddChatMessage(string.format(GetLocalizationMessage(94), arg), 0xFFFFFFFF)
 				settings.maincfg.AvionicsMode = 0
 			end
 			inicfg.save(settings, "avionics")
 		else
-			print("{00A2FF}[Avionics]: {FFFFFF}/swamode не может быть больше 4")
-			sampAddChatMessage(string.format("{00A2FF}[Avionics]: {FFFFFF}/swamode не может быть больше 4", arg), 0xFFFFFFFF)
+			print(GetLocalizationMessage(95))
+			sampAddChatMessage(string.format(GetLocalizationMessage(95), arg), 0xFFFFFFFF)
 		end
 	end
 end
 
 function SetZoomFix_CMD(arg)
 	if #arg < 1 then
-			print("Синтаксис: /swaz [value]")
+			print(GetLocalizationMessage(96))
 	else
 		print(arg)
 		settings.maincfg.ZoomFix = tonumber(arg)
-		sampAddChatMessage(string.format("{00A2FF}[Avionics]: {FFFFFF}Скорость приближения камеры установлена на %s", arg), 0xFFFFFFFF)
+		sampAddChatMessage(string.format(GetLocalizationMessage(97), arg), 0xFFFFFFFF)
 		inicfg.save(settings, "avionics")
 	end
 end
 
 function AddPPM_CMD(arg)
 	if #arg < 2 then
-		print("Синтаксис: /addppm [X] [Y] *[Z] (now: [", arg, "])")
+		print(GetLocalizationMessage(98), " [", arg[1], arg[2], arg[3], "])")
 	else
 		--print(arg)
 		local args = {}
@@ -943,16 +1103,16 @@ function AddPPM_CMD(arg)
 			table.insert(PPMZ, tonumber(arg[3]))
 		end
 		PPMCur = #PPMX
-		sampAddChatMessage(string.format("{00A2FF}[Avionics]: {FFFFFF}%.2f %.2f %.2f - ППМ %i", PPMX[PPMCur], PPMY[PPMCur], PPMZ[PPMCur], PPMCur), 0xFFFFFFFF)
+		sampAddChatMessage(string.format(GetLocalizationMessage(99), PPMX[PPMCur], PPMY[PPMCur], PPMZ[PPMCur], PPMCur), 0xFFFFFFFF)
 	end
 end
 
 function AddNextPPM_CMD(arg)
-	sampAddChatMessage("{00A2FF}[Avionics]: {FFFFFF}Полноценно редактировать планы полёта можно с Avionics Editor, или на сайте http://sampmap.ru/samap", 0xFFFFFFFF)
+	sampAddChatMessage(GetLocalizationMessage(100), 0xFFFFFFFF)
 end
 
 function DelPPM_CMD(arg)
-	sampAddChatMessage("{00A2FF}[Avionics]: {FFFFFF}Полноценно редактировать планы полёта можно с Avionics Editor, или на сайте http://sampmap.ru/samap", 0xFFFFFFFF)
+	sampAddChatMessage(GetLocalizationMessage(100), 0xFFFFFFFF)
 end
 
 function ClrPPM_CMD()
@@ -962,7 +1122,7 @@ function ClrPPM_CMD()
 		PPMZ[i] = nil
 	end
 	PPMCur = -1
-	sampAddChatMessage("{00A2FF}[Avionics]: {FFFFFF}Координаты всех ППМ очищены.", 0xFFFFFFFF)
+	sampAddChatMessage(GetLocalizationMessage(101), 0xFFFFFFFF)
 end
 
 function CamToPPM_CMD()
@@ -971,12 +1131,12 @@ function CamToPPM_CMD()
 			Cam_TarX = PPMX[PPMCur]
 			Cam_TarY = PPMY[PPMCur]
 			Cam_TarZ = PPMZ[PPMCur]
-			sampAddChatMessage(string.format("{00A2FF}[Avionics]: {FFFFFF}Камера установлена в координаты ППМ %i (%.2f; %.2f; %.2f).", PPMCur, PPMX[PPMCur], PPMY[PPMCur], PPMZ[PPMCur]), 0xFFFFFFFF)
+			sampAddChatMessage(string.format(GetLocalizationMessage(102), PPMCur, PPMX[PPMCur], PPMY[PPMCur], PPMZ[PPMCur]), 0xFFFFFFFF)
 		else
-			sampAddChatMessage("{00A2FF}[Avionics]: {FFFFFF}Невозможно направить камеру. ППМ Не задан.", 0xFFFFFFFF)
+			sampAddChatMessage(GetLocalizationMessage(103), 0xFFFFFFFF)
 		end
 	else
-		sampAddChatMessage("{00A2FF}[Avionics]: {FFFFFF}Вы находитесь в режиме пилотирования. Чтобы перейти в режим камеры введите {00A2FF}/swcam", 0xFFFFFFFF)
+		sampAddChatMessage(GetLocalizationMessage(104), 0xFFFFFFFF)
 	end
 end
 
@@ -986,10 +1146,10 @@ function TargetToPPM_CMD()
 			print(Cam_TarX, Cam_TarY, Cam_TarZ)
 			AddPPM_CMD({Cam_TarX, Cam_TarY, Cam_TarZ})--string.format("%.2f %.2f %.2f", Cam_TarX, Cam_TarY, Cam_TarZ))
 		else
-			sampAddChatMessage("{00A2FF}[Avionics]: {FFFFFF}Камера находится в Unfixed mode. Перейдите в Fixed mode {00A2FF}нажав ЛКМ", 0xFFFFFFFF)
+			sampAddChatMessage(GetLocalizationMessage(105), 0xFFFFFFFF)
 		end
 	else
-		sampAddChatMessage("{00A2FF}[Avionics]: {FFFFFF}Добавить ППМ возможно только в режиме камеры. {00A2FF}/swcam", 0xFFFFFFFF)
+		sampAddChatMessage(GetLocalizationMessage(106), 0xFFFFFFFF)
 	end
 end
 
@@ -1009,7 +1169,7 @@ function SAMarkerToPPM_CMD()
 		if res then 
 			AddPPM_CMD({x, y, z}) 
 		else
-			print("No samp markers (single/race) found")
+			print(GetLocalizationMessage(107))
 		end
 	end
 end
@@ -1020,7 +1180,7 @@ function RaceToPPM_CMD()
 	if res then
 		AddPPM_CMD({x, y, z})
 	else
-		print("No samp race markers found")
+		print(GetLocalizationMessage(108))
 	end
 end
 
@@ -1029,18 +1189,18 @@ function VehicleToPPM_CMD()
 		local vehID = storeCarCharIsInNoSave(PLAYER_PED)
 		local PX, PY, PZ = getCarCoordinates(vehID)
 		AddPPM_CMD({PX, PY, PZ})--string.format("%.2f %.2f %.2f", PX, PY, PZ))
-		sampAddChatMessage(string.format("{00A2FF}[Avionics]: {FFFFFF}ППМ добавлен из текущих координат: [%.2f;%.2f;%.2f]", PX, PY, PZ), 0xFFFFFFFF)
+		sampAddChatMessage(string.format(GetLocalizationMessage(109), PX, PY, PZ), 0xFFFFFFFF)
 	else
-		sampAddChatMessage("{00A2FF}[Avionics]: {FFFFFF}Невозможно добавить ППМ. Вы не находитесь в транспорте.", 0xFFFFFFFF)
+		sampAddChatMessage(GetLocalizationMessage(110), 0xFFFFFFFF)
 	end
 end
 
 function AutoPilot_CMD()
 	if PPMCur == -1 then
-		sampAddChatMessage("{00A2FF}[Avionics]: {FFFFFF}Автопилот отключен (ППМ не задан)", 0xFFFFFFFF)
+		sampAddChatMessage(GetLocalizationMessage(111), 0xFFFFFFFF)
 		AutoPilotOff_CMD()
 	elseif settings.maincfg.AvionicsMode == 0 then
-		sampAddChatMessage(string.format("{00A2FF}[Avionics]: {FFFFFF}Автопилот включен. ППМ: %i", PPMCur), 0xFFFFFFFF)
+		sampAddChatMessage(string.format(GetLocalizationMessage(112), PPMCur), 0xFFFFFFFF)
 		local vid = storeCarCharIsInNoSave(PLAYER_PED)
 		if isCharInAnyPlane(PLAYER_PED) then
 			planeGotoCoords(vid, PPMX[PPMCur], PPMY[PPMCur], PPMZ[PPMCur], 50, 100)
@@ -1053,7 +1213,7 @@ end
 
 function AutoPilotOff_CMD()
 	if IsAutoPilot then
-		sampAddChatMessage("{00A2FF}[Avionics]: {FFFFFF}Автопилот отключен (Управляй вручную)", 0xFFFFFFFF)
+		sampAddChatMessage(GetLocalizationMessage(113), 0xFFFFFFFF)
 		if getAudioStreamState(audio_autopilotoff) == -1 then
 			setAudioStreamState(audio_autopilotoff, as_action.PLAY)
 		end
@@ -1061,7 +1221,7 @@ function AutoPilotOff_CMD()
 		taskWarpCharIntoCarAsDriver(PLAYER_PED, storeCarCharIsInNoSave(PLAYER_PED))
 		IsAutoPilot = false
 	else
-		sampAddChatMessage("{00A2FF}[Avionics]: {FFFFFF}Автопилот уже отключен. Дополнительных действий не требуется.", 0xFFFFFFFF)
+		sampAddChatMessage(GetLocalizationMessage(114), 0xFFFFFFFF)
 	end
 end
 
@@ -1082,7 +1242,7 @@ end
 function CheckChatPPMUpdates()
 	if not(settings.maincfg.IsTargetInputActive) then return end
 	text, prefix, color, pcolor = sampGetChatString(99)
-	if string.find(text, "Получены координаты") then
+	if string.find(text, GetLocalizationMessage(115)) then
 		local args={}
 		local minindex
 		for str in string.gmatch(text, "([^".." ".."]+)") do
@@ -3111,7 +3271,7 @@ function ObjectRendering(PosX, PosY, PosZ, Color)
 	local sX, sY = convert3DCoordsToScreen(PosX, PosY, PosZ)
 	if Lang_Eng then
 		--renderDrawTexture(hud_comp, sX-5, sY-5, -20, 20, 120, Color)
-		renderSquare(sX, sY, 10, Color)
+		renderRomb(sX, sY, 10, Color)
 	else
 		renderCircle(sX, sY, 10, Color)
 	end
@@ -3168,6 +3328,18 @@ function renderSquare(screenX, screenY, size, color)
 	renderEnd()
 end
 
+function renderRomb(screenX, screenY, size, color)
+	renderBegin(3)
+	renderColor(color)
+	renderVertex(screenX - size, screenY)
+	renderVertex(screenX, screenY + size)
+	renderVertex(screenX + size, screenY)
+	renderVertex(screenX, screenY - size)
+	renderVertex(screenX - size, screenY)
+	
+	renderEnd()
+end
+
 function calcRadiusPos(pos, angle, radius)
 	local wX, wY
 	wX = pos.x + radius * math.cos(math.rad(angle))
@@ -3182,9 +3354,9 @@ function AGTargetingRender(vehID, bombCruizeSpeed)
 	local AZ = 360 - getCarHeading(vehID)
 	local bombSpeed = getCarSpeed(vehID)
 	if Lang_Eng then
-		bombSpeed = bombSpeed * 1.210
+		bombSpeed = bombSpeed * settings.maincfg.BombBallisticEN--bombSpeed * 1.210
 	else
-		bombSpeed = bombSpeed * 1.395--1.45
+		bombSpeed = bombSpeed * settings.maincfg.BombBallisticRU--bombSpeed * 1.395--1.395RUS--1.45
 	end
 	--local bombSpeed = 500
 	bombCruizeSpeed = bombSpeed --* 1.7
@@ -3236,14 +3408,17 @@ function AGTargetingRender(vehID, bombCruizeSpeed)
 		
 		
 		if (i > 1.5) then
-			local isVisiblePoint = isLineOfSightClear(posx, posY, posZ, targetX, targetY, targetZ, true, false, false, false, false) 
+			local isVisiblePoint = isLineOfSightClear(posx, posY, posZ, targetX, targetY, targetZ, true, false, false, false, false)
 			if (not isVisiblePoint) then 
-				lineColor = 0xFFAAAAAA 
-			else
-				lineColor = RenderColor
+				lineColor = 0xFFAAAAAA--0xFFAAAAAA 
+			elseif bombCruizeSpeed > 0.5 then
+				--lineColor = 0xFFFF0000--RenderColor
 				local sX, sY = convert3DCoordsToScreen(lineX, lineY, lineZ)
 				local tX, tY = convert3DCoordsToScreen(targetX, targetY, targetZ)
-				renderDrawLine(tX, tY, sX, sY, 1, lineColor) 
+				lineColor = RenderColor
+				renderDrawLine(tX, tY, sX, sY, 1, RenderColor) 
+			else
+				lineColor = 0xFFFF0000
 			end
 		end
 		lineX, lineY, lineZ = targetX, targetY, targetZ
@@ -3929,13 +4104,13 @@ function RenderTargetPlane(vehID)
 			if Lang_Eng then
 				renderDrawTexture(hud_lock, WX-25, WY-25, 50, 50, 0, RenderColor)
 				--renderDrawTexture(hud_comp, WX-10, WY-10, 20, 20, 45, RenderColor)
-				renderSquare(WX, WY, 10, RenderColor)
+				renderRomb(WX, WY, 8, RenderColor)
 				renderDrawTexture(hud_self, WVX, WVY, 15, 5, 180-mRoll, RenderColor)
 				--renderDrawTexture(hud_comp, WVX-1, WVY-2, 15, 15, 180-mRoll, RenderColor)
-				renderSquare(WVX, WVX, 10, RenderColor)
+				renderRomb(WVX, WVX, 8, RenderColor)
 				renderDrawTexture(hud_vvec, WvecX, WvecY, 15, 15, 180, RenderColor)
 				--renderDrawTexture(hud_comp, WvecX-1, WvecY-1, 15, 15, 180, RenderColor)
-				renderSquare(WvecX, WvecX, 10, RenderColor)
+				renderRomb(WvecX, WvecX, 8, RenderColor)
 			
 				render_text(Text_FontLow, string.format("%s\nSpd:%.0f\nAlt:%.0f\nDst%.1f", tName, tSpd, tPZ, tDst), WX, WY+50, RenderColor, 1, 0xFF000000, false)
 			else
@@ -4183,7 +4358,7 @@ function UpdateMarkers(vehID)
 			if not(LongRageMarkers[i] == nil) then
 				local dist = getDistanceBetweenCoords2d(px, py, LongRageMarkers[i].coords.x, LongRageMarkers[i].coords.y)
 				local isOnScreen = isPointOnScreen(LongRageMarkers[i].coords.x, LongRageMarkers[i].coords.y, LongRageMarkers[i].coords.z, 100)
-				if  dist < 2000 and dist > 400 and math.abs(pz - LongRageMarkers[i].coords.z) < 500 and isOnScreen then -- >380 not >100
+				if  dist < 3000 and dist > 150 and math.abs(pz - LongRageMarkers[i].coords.z) < 500 and isOnScreen then -- >380 not >100
 					RenderLongRageMarker(LongRageMarkers[i].coords.x, LongRageMarkers[i].coords.y, LongRageMarkers[i].coords.z, dist)
 				end
 			end
@@ -4215,8 +4390,9 @@ end
 function RenderLongRageMarker(x, y, z, dist)
 	local WX, WY = convert3DCoordsToScreen(x, y, z)
 	--renderDrawTexture(hud_comp, WX, WY, 10, 10, 45, 0xFF11FF11)
-	renderSquare(WX, WY, 10, 0xFF11FF11)
-	renderFontDrawText(Text_FontLowest, string.format("[%.0f]", dist), WX+2, WY+10, 0xFF11FF11)
+	--renderSquare(WX, WY, 10, 0xFF11FF11)
+	renderRomb(WX, WY, 8, 0xFF11FF11)
+	renderFontDrawText(Text_FontLowest, string.format("[%d]", dist), WX-10, WY+10, 0xFF11FF11)
 end
 
 --------------------------------------------------------------------------------------#region MINIMAP Мини-карта
@@ -4671,7 +4847,7 @@ function CommandRegisteredSwitch(cmd)
 	elseif cmd == "/vehwpt" then VehicleToPPM_CMD(args) return true
 	elseif cmd == "/vehppm" then VehicleToPPM_CMD(args) return true
 	elseif cmd == "/swamode" then AvionicsMode_CMD(args) return true
-	elseif cmd == "/swam" then AvionicsMode_CMD(args) return true
+	elseif cmd == "/swam" then AvionicsMode_CMD(args[1]) return true
 	elseif cmd == "/swazoom" then SetZoomFix_CMD(args) return true
 	elseif cmd == "/swaz" then SetZoomFix_CMD(args) return true
 	elseif cmd == "/lsia" then LoadLSIA_CMD(args) return true
