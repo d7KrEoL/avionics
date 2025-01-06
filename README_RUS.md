@@ -1,5 +1,7 @@
 # [VirPiL](https://discord.gg/QSKkNhZrTh) - [Avionics](https://github.com/d7KrEoL/avionics/releases/download/MINOR/SW_Avionics.zip)
   Авионика для Grand Theft Auto San Andreas (SAMP)
+  
+  [🇬🇧English](README.md) ☁️ [🇵🇱Polski](README_POL.md) ☁️ [🇨🇿Čeština](README_CHE.md)
 ## Общая информация
 ![alt text](https://github.com/d7KrEoL/avionics/blob/main/Readme/0.%20%D0%9E%D0%B1%D1%89%D0%B8%D0%B9%20%D0%B2%D0%B8%D0%B4%20-%20%D0%BD%D0%BE%D0%B2%D1%8B%D0%B9.png)
 
