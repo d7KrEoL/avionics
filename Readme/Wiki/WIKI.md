@@ -1,5 +1,5 @@
 # Документация по использованию скрипта Avionics. 
-[<-Назад](https://github.com/d7KrEoL/avionics/blob/main/README.md)
+[<-Назад](https://github.com/d7KrEoL/avionics/wiki)
 
 ## Техническая информация и основной функционал
 #### 1. [Установка скрипта](https://github.com/d7KrEoL/avionics/blob/main/Readme/Wiki/Script_Install.md)
