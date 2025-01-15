@@ -1,0 +1,136 @@
+{00A2FF}V{FFFFFF}ir{00A2FF}P{FFFFFF}i{00A2FF}L {FFFFFF}Avionics. To open menu use: {00A2FF}/swavionics
+Choose language
+-Systems-
+HUD: %s
+Mode: %s
+Radio: %s
+Radio 2: %s
+Autoeject: %s
+RWS: %s
+Target receieve.: %s
+Auto-FHT: %s
+Display HUD: %s
+Info messages.: %s
+-Ballistic computers-
+GRD-B: %s
+GRD-G: %s
+Ballistic coef. %s
+(type NATO)
+(type RU)
+(coef.)
+Apply (set coef.)
+Reset
+Danger altitude controller
+(m), radio altimeter
+Apply (set altitude)
+-Settings-
+!Low values ​​may result in Loading!
+Zoom speed
+Control keys
+You can assign a control key by clicking on the button opposite
+the setting, then pressing the desired key on the keyboard
+Current key: %s
+Reassign (prev. WPT)
+[Avionics]: клавиша теперь назначена на: %i (%s)
+Reassign (next WPT)
+Reassign (prev. mode)
+Reassign (next mode)
+Reassign (break lock)
+Reassign (menu)
+Menu Window Settings
+Don't hide in pause menu
+Color: night
+Color: day
+Speech informant: BETTY
+Speech informant: RITA
+Default SI: BETTY
+Default SI: RITA
+List of text commands of the script
+These commands are entered into the general chat, like regular server commands:
+/setppm /setwpt - set current WPT
+/swavionics /swav /avionix - Open/close this menu
+/swcam - Go to/leave target container
+/swmag - (For helicopters) release/drop magnet
+/addwpt /addppm - Add WPT by coordinates
+/clearppm /clearwpt - Clear flight plan (remove all waypoints)
+/autopilot /swapt - Turn on autopilot
+/swapto - Disable autopilot
+/wptcam /ppmcam /tarcam - Rotate the target designation container camera to the WPT
+/tarppm /tarwpt - Add waypoint from target coordinates (fixed camera)
+/vehppm /vehwpt - Add waypoints from current aircraft coordinates (own)
+/swamode /swam - Switching avionics mode
+/swazoom /swaz - Change the camera zoom speed
+/safp /ldfp - Load flight plan from file (place in resource/avionics/flightplan folder)
+/savefp /svfp - Save the flight plan to a file (it will be located in the folder resource/avionics/flightplan)
+
+
+
+
+
+
+
+
+
+
+On
+Off
+NAV
+BVR
+GRD
+LRF
+LND
+[Avionics]: Press the desired key
+Syntax: /setppm [number]
+{00A2FF}[Avionics]: {FFFFFF}WPT display is off {00A2FF}(/setwpt 0)
+{00A2FF}[Avionics]: {FFFFFF}WPT No. {00A2FF}%s {FFFFFF}[%s, %s]
+{00A2FF}[Avionics]: Error. {FFFFFF}WPT No. %s was not added to the onboard system
+Syntax: /swamode [number] (0 - НАВ, 1 - БВБ, 2 - ЗМЛ, 3 - ДВБ, 4 - ПОС)
+{00A2FF}[Avionics]: {FFFFFF}Синтаксис: /swamode [number] (0 - Nav, 1 - BVR, 2 - GRD, 3 - LRF)
+{00A2FF}[Avionics]: {FFFFFF}Navigation mode enabled
+{00A2FF}[Avionics]: {FFFFFF}Close rage air combat mode enabled
+{00A2FF}[Avionics]: {FFFFFF}Air-to-surface mode enabled
+{00A2FF}[Avionics]: {FFFFFF}Long-range air combat mode enabled
+{00A2FF}[Avionics]: {FFFFFF}Landing mode enabled
+{00A2FF}[Avionics]: {FFFFFF}Mode with number '%s' not found. Navigation mode enabled
+{00A2FF}[Avionics]: {FFFFFF}/swamode cannot be greater than 4
+Syntax: /swaz [value]
+{00A2FF}[Avionics]: {FFFFFF}Camera zoom speed set to %s
+Syntax: /addppm [X] [Y] *[Z] (now:
+{00A2FF}[Avionics]: {FFFFFF}%.2f %.2f %.2f - WPT %i
+{00A2FF}[Avionics]: {FFFFFF}Full flight plan editing is available with Avionics Editor, or on the site http://sampmap.ru/samap
+{00A2FF}[Avionics]: {FFFFFF}All WPT coordinates have been cleared.
+{00A2FF}[Avionics]: {FFFFFF}Camera set to WPT coordinates %i (%.2f; %.2f; %.2f).
+{00A2FF}[Avionics]: {FFFFFF}Cannot point camera. WPT not set.
+{00A2FF}[Avionics]: {FFFFFF}You are in piloting mode. To switch to camera mode, enter {00A2FF}/swcam
+{00A2FF}[Avionics]: {FFFFFF}Camera is in Unfixed mode. Switch to Fixed mode {00A2FF}by clicking the LMB
+{00A2FF}[Avionics]: {FFFFFF}WPT can only be added in camera mode. {00A2FF}/swcam
+No samp markers (single/race) found
+No samp race markers found
+{00A2FF}[Avionics]: {FFFFFF}WPT added from current coordinates: [%.2f;%.2f;%.2f]
+{00A2FF}[Avionics]: {FFFFFF}Cannot add WPT. You are not in transport.
+{00A2FF}[Avionics]: {FFFFFF}Autopilot disabled (WPT not set)
+{00A2FF}[Avionics]: {FFFFFF}Autopilot enabled. WPT: %i
+{00A2FF}[Avionics]: {FFFFFF}Autopilot disabled. (Control manually)
+{00A2FF}[Avionics]: {FFFFFF}Autopilot is already disabled. No further actions required.
+Coordinates received
+{00A2FF}[Avionics]: {FFFFFF}Mode: %d
+{00A2FF}[Avionics]: {FFFFFF}Incorrect input. No arguments found.
+{00A2FF}[Avionics]: {FFFFFF}Incorrect input. Arguments count: 
+Target:
+Cannot parse arguments:
+{00A2FF}[Avionics]: {FFFFFF}X: 
+Y: 
+{00A2FF}[Avionics]: {FFFFFF}%s %s
+Target coordinates:
+target: 
+{00A2FF}V{FFFFFF}ir{00A2FF}P{FFFFFF}i{00A2FF}L {FFFFFF}Avionics: Unfixed: %d 90 %d
+{00A2FF}V{FFFFFF}ir{00A2FF}P{FFFFFF}i{00A2FF}L {FFFFFF}Avionics: Unfixed: %d %d
+{00A2FF}V{FFFFFF}ir{00A2FF}P{FFFFFF}i{00A2FF}L {FFFFFF}Avionics: Camera fixed on coordinates: [%.2f;%.2f;%.2f]
+{00A2FF}V{FFFFFF}ir{00A2FF}P{FFFFFF}i{00A2FF}L {FFFFFF}Avionics: Cannot fix camera. Point not found.
+Camera mode
+Zoom: 
+Syntax: /ldfp [filename] - load flight plan
+Error: flight plan not found ( %s )
+Syntax: /svfp [filename] - save flight plan
+{FF0000}[Avionics]: {FFFFFF}unable to save flight plan ( %s )
+{00A2FF}[Avionics] {FFFFFF}flight plan saved successfully ( %s )
