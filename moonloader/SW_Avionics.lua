@@ -25,7 +25,7 @@ local SPO_IsAutoFlaresKeyNeeded
 local Iteration = 0
 local STime
 
-local Ver = "0.1.7-beta.1501"
+local Ver = "0.1.7-beta.2001"
 
 script_name("SW_Avionics")
 script_author("d7.KrEoL")
@@ -48,6 +48,7 @@ local settings = inicfg.load(
 			IsShowMessage = true,--Показ сообщения при посадке в технику
 			IsBallisticBombRender = true, -- Отображение баллистического вычислителя (бомбы) в режиме воздух-земля
 			IsBallisticGunRender = false, -- Отображение балистического вычислителя (пушка) в режиме воздух-земля
+			IsShowInfantry = true,
 			Localization = "Russian.txt",
 			BombBallisticRU = 1.395,
 			BombBallisticEN = 1.210,
@@ -240,7 +241,6 @@ function main()
 	repeat wait(0) until isSampLoaded()
 	--repeat wait(0) until isSampAvailable()
 	print("Loading avionics script")
-	-- sampAddChatMessage("otsosite moi titi", -1)
 	
 	InitVars()
 	InitGUI()
@@ -496,7 +496,6 @@ function onUpdateGlobals(vehID, NTime)
 		if IterTimer > 5 then 
 			IterTimer = 0 
 			PrevSpd = getCarSpeed(vehID)*2
-			-- GetTD_Update()
 		else
 			IterTimer = IterTimer + 1
 		end
@@ -546,8 +545,6 @@ end
 
 function onUpdateFirstRender(vehID)
 	if settings.maincfg.IsShowMessage then
-		-- sampAddChatMessage("{00A2FF}V{FFFFFF}ir{00A2FF}P{FFFFFF}i{00A2FF}L {FFFFFF}Avionics. Чтобы открыть меню ИЛС введите {00A2FF}/swavionics", 0xFFFFFFFF)
-		-- print(GetLocalizationMessage(1))
 		sampAddChatMessage(GetLocalizationMessage(1), 0xFFFFFFFF)--{00A2FF}V{FFFFFF}ir{00A2FF}P{FFFFFF}i{00A2FF}L {FFFFFF}Avionics. Чтобы открыть меню ИЛС введите {00A2FF}/swavionics
 	end
 	IsPlaneRendered = true
@@ -604,34 +601,16 @@ function GUI_DrawMainMenu()
 	local strCur
 	local GUI_ZoomSpd = imgui.ImInt(settings.maincfg.ZoomFix)
 
-	-- for i, v in ipairs(Languages) do
-		-- if imgui.MenuItem(v, imgui.ImVec2(100, 0)) then
-			-- print(v, " is chosen")
-			-- settings.maincfg.Localization = v
-			-- LoadLocalizationFile(v)
-			-- inicfg.save(settings, "avionics")
-		-- end
-	-- end
-	-- imgui.PushItemHeight(50)
-	
-	-- imgui.PopItemHeight()
-
 	imgui.SetNextWindowPos(imgui.ImVec2(CentralPosX-(sX*0.28), CentralPosY), imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5))
-	imgui.SetNextWindowSize(imgui.ImVec2(455, 700), imgui.Cond.FirstUseEver)
+	imgui.SetNextWindowSize(imgui.ImVec2(455, 720), imgui.Cond.FirstUseEver)
 	imgui.Begin(WinStr, show_main_window, imgui.WindowFlags.NoResize)
 	
 	if imgui.ListBox(encoding.UTF8(GetLocalizationMessage(2)), SelectedLanguage, Languages, 2) then --Выберите язык
-		-- print(Languages[SelectedLanguage.v + 1], "is selected")
 		settings.maincfg.Localization = Languages[SelectedLanguage.v + 1]
 		inicfg.save(settings, "avionics")
 		ReloadLocalization()
 	end
 	
-	-- imgui.SetCursorPosX(imgui.GetWindowWidth()/2-35)
-	-- imgui.Text(encoding.UTF8"-Language-")
-	
-	-- if imgui.CollapsingHeader(encoding.UTF8'Язык') then
-	-- end
 	
 	
 	imgui.SetCursorPosX(imgui.GetWindowWidth()/2-35)
@@ -717,6 +696,12 @@ function GUI_DrawMainMenu()
 		inicfg.save(settings, "avionics")
 	end
 	
+	strCur = encoding.UTF8(string.format(GetLocalizationMessage(137), GUI_Func_CheckBoolStr(settings.maincfg.IsShowInfantry)))--Инф. сообщ.: %s
+	if imgui.Button(strCur, imgui.ImVec2(170, 0)) then
+		settings.maincfg.IsShowInfantry = not settings.maincfg.IsShowInfantry
+		inicfg.save(settings, "avionics")
+	end
+	
 	imgui.NewLine()
 	imgui.SetCursorPosX(imgui.GetWindowWidth()/2-90)
 	imgui.Text(encoding.UTF8(GetLocalizationMessage(14)))---Баллистические вычислители-
@@ -732,8 +717,6 @@ function GUI_DrawMainMenu()
 		settings.maincfg.IsBallisticGunRender = not settings.maincfg.IsBallisticGunRender
 		inicfg.save(settings, "avionics")
 	end
-	-- imgui.NewLine()
-	-- imgui.SameLine()
 	imgui.GetStyle().Colors[imgui.Col.Button] = imgui.ImVec4(0.65,0.0,0.0,0.5)
 	imgui.Text(string.format(encoding.UTF8(GetLocalizationMessage(17)), Lang_Eng and encoding.UTF8(GetLocalizationMessage(18)) or encoding.UTF8(GetLocalizationMessage(19))))--Баллистика бомб %s ; (тип NATO) ; (тип RU)
 	imgui.PushItemWidth(150)
@@ -1092,12 +1075,7 @@ function AddPPM_CMD(arg)
 	if #arg < 2 then
 		print(GetLocalizationMessage(98), " [", arg[1], arg[2], arg[3], "])") --Синтаксис: /addppm [X] [Y] *[Z] (now:
 	else
-		--print(arg)
 		local args = {}
-		-- for str in string.gmatch(arg, "([^".." ".."]+)") do
-			-- table.insert(args, str)
-		-- end
-		--print(args[1], args[2], args[3])
 		table.insert(PPMX, tonumber(arg[1]))
 		table.insert(PPMY, tonumber(arg[2]))
 		if arg[3] == nil then 
@@ -1192,10 +1170,10 @@ end
 function PlayerIdToPPM_CMD(arg)
 	if #arg < 1 then return end
 	if arg[1] == nil  then return end
+	ClearLRFTargetPlayer()
 	local id = tonumber(arg[1])
 	if id == nil then return end
 	if not sampIsPlayerConnected(id) then 
-		ClearLRFTargetPlayer()
 		print("Player not connected: ", id)
 		return
 	end
@@ -2226,6 +2204,7 @@ function UpdateSpeedVector(vehID)
 	local wX, wY = convert3DCoordsToScreen(vOX, vOY, vOZ)
 	local sX, sY = convert3DCoordsToScreen(vCX+vX, vCY+vY, vCZ+vZ)
 	
+	if not  isPointOnScreen(vCX + vX, vCY + vY, vCZ + vZ, 1) then return end
 	renderCircle(sX, sY, 5, RenderColor)
 	renderBegin(2)
 	renderColor(RenderColor)
@@ -2246,13 +2225,15 @@ end
 
 function UpdatePPM(X, Y, Z, vehID)
 	if Z < getGroundZFor3dCoord(X,Y,Z) then Z = getGroundZFor3dCoord(X,Y,Z) end
+	
 	local sX, sY = convert3DCoordsToScreen(X, Y, Z)
 	local vX, vY, vZ = getCarSpeedVector(vehID)
 	local vCX, vCY, vCZ = getCarCoordinates(vehID)
+	local dist = getDistanceBetweenCoords2d(X, Y, vCX, vCY) - 500
+	if not  isPointOnScreen(X, Y, Z, dist > 0 and dist or 1) then return end
 	local angle =  getAngleBetween2dVectors(vCX-X, vCY-Y, vX, vY)
 	if (angle > 90) then
 		if Lang_Eng then
-			--renderDrawTexture(hud_comp, sX-10, sY-10, -50, 50, 180, RenderColor)
 			renderSquare(sX, sY, 10, RenderColor)
 		else
 			renderCircle(sX, sY, 15, RenderColor)
@@ -2967,8 +2948,9 @@ end
 
 function GetCharPos(playerData, charID)
 	if isCharInAnyCar(charID) then return end
-	local posX, posY, posZ = getCharCoordinates(charID)
-	if settings.maincfg.AvionicsMode == 2  then
+	if settings.maincfg.AvionicsMode == 2 and settings.maincfg.IsShowInfantry then
+		local posX, posY, posZ = getCharCoordinates(charID)
+		if  not isPointOnScreen(posX, posY, posZ, 3) then return end
 		if IsTargetNoCollision(
 				playerData.position.x,
 				playerData.position.y,
@@ -2990,7 +2972,6 @@ function GetCharPos(playerData, charID)
 			else
 				TriangleRendering(posX, posY, posZ, RenderColor)
 			end
-			--ShowTextOnRadar("{t}", posX, posY, posZ)
 		end
 	end
 end
@@ -3086,7 +3067,6 @@ end
 function ObjectRendering(PosX, PosY, PosZ, Color)
 	local sX, sY = convert3DCoordsToScreen(PosX, PosY, PosZ)
 	if Lang_Eng then
-		--renderDrawTexture(hud_comp, sX-5, sY-5, -20, 20, 120, Color)
 		renderRomb(sX, sY, 10, Color)
 	else
 		renderCircle(sX, sY, 10, Color)
@@ -3101,7 +3081,6 @@ end
 function TriangleRendering(elementNumber, PosX, PosY, PosZ, Color)
 	local sX, sY = convert3DCoordsToScreen(PosX, PosY, PosZ)
 	renderFontDrawText(Text_FontLowest, string.format("%d", elementNumber), sX - 3, sY + 5, Color, false)
-	-- render_text(Text_FontLow, string.format("%d", elementNumber), sX - 3, sY + 7, Color, 1, 0xFF000000, false)
 	renderTriangle(sX, sY, 3, Color)
 end
 
@@ -3174,9 +3153,7 @@ function AGTargetingRender(vehID, bombCruizeSpeed)
 	else
 		bombSpeed = bombSpeed * settings.maincfg.BombBallisticRU--bombSpeed * 1.395--1.395RUS--1.45
 	end
-	--local bombSpeed = 500
 	bombCruizeSpeed = bombSpeed --* 1.7
-	--bombCruizeSpeed = 500
 	
 	local bombPitch = getCarPitch(vehID)
 	if bombPitch > 180 then bombPitch = bombPitch-360 end
@@ -3207,12 +3184,8 @@ function AGTargetingRender(vehID, bombCruizeSpeed)
 	local lineX, lineY, lineZ = posX, posY, posZ
 	while (targetZ > getGroundZFor3dCoord(targetX, targetY, targetZ+0.5)+1 and targetZ > -20 and i < 400) do
 		i = i + 0.1
-		--bombPitch = math.atan2(math.rad(spdVecZ), math.rad((spdVecX + spdVecY) / 2))
 		bombPitch = math.atan2(bombSpeed, bombCruizeSpeed)
-		
 		bombSpeed = bombSpeed - 9.81
-		
-		--targetZ = posZ + bombCruizeSpeed * i * math.sin(math.rad(bombPitch)) - (9.81 * math.pow(i, 2) / 2)
 		targetZ = posZ + ((bombSpeed * math.sin(math.rad(-dropPitch)) - ((9.81 * math.pow(i, 2))/2)))
 		
 		V0x = math.cos(math.rad(dropPitch)) * bombCruizeSpeed--dropPitch
@@ -3221,14 +3194,13 @@ function AGTargetingRender(vehID, bombCruizeSpeed)
 		targetX = posX + math.sin(math.rad(AZ)) * projectionXt
  		targetY = posY + math.cos(math.rad(AZ)) * projectionXt
 		
-		
+		local dist = getDistanceBetweenCoords2d(posX, posY, targetX, targetY) - 500
 		
 		if (i > 1.5) then
 			local isVisiblePoint = isLineOfSightClear(posx, posY, posZ, targetX, targetY, targetZ, true, false, false, false, false)
 			if (not isVisiblePoint) then 
 				lineColor = 0xFFAAAAAA--0xFFAAAAAA 
-			elseif bombCruizeSpeed > 0.5 then
-				--lineColor = 0xFFFF0000--RenderColor
+			elseif bombCruizeSpeed > 0.5 and isPointOnScreen(targetX, targetY, targetZ, dist > 0 and dist or 5) then
 				local sX, sY = convert3DCoordsToScreen(lineX, lineY, lineZ)
 				local tX, tY = convert3DCoordsToScreen(targetX, targetY, targetZ)
 				lineColor = RenderColor
@@ -3242,6 +3214,8 @@ function AGTargetingRender(vehID, bombCruizeSpeed)
 	local distance = getDistanceBetweenCoords3d(posX, posY, posZ, targetX, targetY, targetZ) * 0.001
 	render_text(Text_FontLow, string.format("Дальность(пуск):%.2fкм", distance), CentralPosX-80, CentralPosY+210, RenderColor, 1, 0xFF000000, false)
 	
+	if not isPointOnScreen(targetX,targetY, targetZ, distance > 500 and distance - 500 or 5) then return end
+	
 	ObjectRendering(targetX, targetY, targetZ, lineColor)
 end
 
@@ -3254,7 +3228,6 @@ function AGTargetingRender_Gun(vehID)
 	local vehiclePosition = {x, y, z}
 	vehiclePosition.x, vehiclePosition.y, vehiclePosition.z = getOffsetFromCarInWorldCoords(vehID, 0, 20, 0)
 	
-	-- local j = 2.3
 	local additionalPos = {x = 1.5, y = 0}
 	
 	rightPosition.x, rightPosition.y, rightPosition.z = getOffsetFromCarInWorldCoords(vehID, 0, 250, 0)
@@ -3286,12 +3259,6 @@ function AGTargetingRender_Gun(vehID)
 		render_text(Text_FontMedium, string.format("дст: %.3d (м)", distance), CentralPosX - 30, CentralPosY + 230, distance > 80 and RenderColor or 0xFFFF0000, 1, 0xFF000000, false)
 	end
 	AGRenderBallisticHistory(vehID, vehiclePosition)
-	-- rightPosition.x, rightPosition.y, rightPosition.z = getOffsetFromCarInWorldCoords(vehID, 0, 40, -0.6)
-	-- leftPosition.x, leftPosition.y, leftPosition.z = getOffsetFromCarInWorldCoords(vehID, 0, 150, -0.4)
-	-- AGRenderLine(rightPosition, leftPosition, vehiclePosition, RenderColor)
-	-- rightPosition.x, rightPosition.y, rightPosition.z = getOffsetFromCarInWorldCoords(vehID, 0, 20, -additionalPos.x - 0.7)
-	-- leftPosition.x, leftPosition.y, leftPosition.z = getOffsetFromCarInWorldCoords(vehID, 0, 40, -0.6)
-	-- AGRenderLine(rightPosition, leftPosition, vehiclePosition, RenderColor)
 
 	rightPosition.x, rightPosition.y, rightPosition.z = getOffsetFromCarInWorldCoords(vehID, additionalPos.x + 0.7, 30, 0)
 	leftPosition.x, leftPosition.y, leftPosition.z = getOffsetFromCarInWorldCoords(vehID, -additionalPos.x - 0.7, 30, 0)
@@ -3424,7 +3391,6 @@ function Cam_AttachCamera(vid, RotX, RotY, RotZ)
 end
 
 function Cam_RenderCameraHUD()
-	--renderDrawTexture(hud_comp, CentralPosX-75, CentralPosY-110, 200, 200, 0, RenderColor) 
 	renderSquare(CentralPosX, CentralPosY, 100, RenderColor)
 end
 
@@ -3571,16 +3537,7 @@ function BanPVOMove()
 end
 ---------------------------------------------------------------------------------------------#region TEXTDRAW GETINFO
 function UpdateServerTDs(vehID)
-	-- local servip, serverport = sampGetCurrentServerAddress()
-	-- if serverip == "51.178.14.84" and serverport == "7777" then
-		-- FindTDs()
-		-- FindTDs2()
-		-- GetLockedPos(vehID)
-		-- RenderLRTarget(vehID)
-	-- else
-		UpdateMarkers(vehID)
-	-- end
-	
+	UpdateMarkers(vehID)
 end
 
 -------------------------------------------------------------------------------------#region MISSILE WARNING SYSTEM Система предупреждения о пуске
@@ -3919,19 +3876,18 @@ function RenderTargetPlane(vehID)
 		elseif isCarOnScreen(vehTarget) then
 			if Lang_Eng then
 				renderDrawTexture(hud_lock, WX-25, WY-25, 50, 50, 0, RenderColor)
-				--renderDrawTexture(hud_comp, WX-10, WY-10, 20, 20, 45, RenderColor)
 				renderRomb(WX, WY, 8, RenderColor)
 				renderDrawTexture(hud_self, WVX, WVY, 15, 5, 180-mRoll, RenderColor)
-				--renderDrawTexture(hud_comp, WVX-1, WVY-2, 15, 15, 180-mRoll, RenderColor)
 				renderRomb(WVX, WVX, 8, RenderColor)
 				renderDrawTexture(hud_vvec, WvecX, WvecY, 15, 15, 180, RenderColor)
-				--renderDrawTexture(hud_comp, WvecX-1, WvecY-1, 15, 15, 180, RenderColor)
 				renderRomb(WvecX, WvecX, 8, RenderColor)
 			
 				render_text(Text_FontLow, string.format("%s\nSpd:%.0f\nAlt:%.0f\nDst%.1f", tName, tSpd, tPZ, tDst), WX, WY+50, RenderColor, 1, 0xFF000000, false)
 			else
 				renderCircle(WX, WY, 1, RenderColor)
 				render_text(Text_FontLow, string.format("%s\nVц:%.0f\nHц:%.0f\nДист%.1f", tName, tSpd, tPZ, tDst), WX, WY+50, RenderColor, 1, 0xFF000000, false)
+				renderDrawTexture(hud_self, WVX, WVY, 15, 5, 180-mRoll, RenderColor)
+				renderDrawTexture(hud_vvec, WvecX, WvecY, 15, 15, 180, RenderColor)
 			end
 		end
 		RenderTargetLineHorizontalRU(vehID, tPX, tPY, tPZ, 0xFFBB0000)
@@ -4008,8 +3964,6 @@ function OnUpdateTargetPlayerCoordinates(marker)
 	if not marker.active then return end
 	print("Target: ", marker, marker.playerId, marker.coords)
 	print("Target marker found: ", marker.coords.x, marker.coords.y, marker.coords.z)
-	
-	--table.insert(LongRageMarkers, {playerid = marker.playerId, isActiveMarker = marker.active, coords = {x = marker.coords.x, y = marker.coords.y, z = marker.coords.z}})
 	GlobalTarget = {x = marker.coords.x, y = marker.coords.y, z = marker.coords.z}
 end
 
@@ -4027,45 +3981,6 @@ function OnRenderLRFTargetPlayer()
 	end
 	RenderTargetLineHorizontalRU(vehID, GlobalTarget.x, GlobalTarget.y, GlobalTarget.z, 0xFF8855FF)
 end
-
--- function FindTDs()
-	-- local str
-	-- local altH = {x, y}
-	-- local distH = {x, y}
-	-- local posx, posy
-	
-	-- local encoding = require 'encoding'
-	-- encoding.default = 'CP1251'
-	-- u8 = encoding.UTF8
-	
-	-- for i = 0, 3600 do
-		-- str = u8:decode(sampTextdrawGetString(i))
-		-- posx, posy = sampTextdrawGetPos(i)
-		-- if string.find(str, "rdr_free_air_captured") then
-			-- TDinfo.target = i
-			-- LRFTarget.ID = i
-		-- elseif posx == 318 and posy == 343 then
-			-- TDinfo.dist = i
-		-- elseif posx == 245 and posy == 343 then
-		-- end
-		-- FindTDs2(i)
-	-- end
--- end
-
--- function FindTDs2(i)
-	-- if TDinfo.target == -999 or TDinfo.dist == nil then
-		-- return false
-	-- else
-		-- local txt = sampTextdrawGetString(TDinfo.dist)
-		-- local str = splitstr(txt, "`n")
-
-	  -- local tmpstr = string.gsub(string.format("%s", str[1]), "%D+", "")
-		-- if #tmpstr > 0 then TDinfo.tdist = tonumber(tmpstr) end
-		-- tmpstr = string.gsub(string.format("%s", str[2]), "%D+", "")
-		
-		-- if #tmpstr > 0 then TDinfo.talt = tonumber(tmpstr) end
-	-- end
--- end
 
 function splitstr (inputstr, sep)
         if sep == nil then
@@ -4135,66 +4050,6 @@ function ConvertTextDrawCoordinatesToScreen(X, Y, SX, SY)
 	return rX, rY
 end
 
--- function RenderLRTarget(vehID)
-	-- if not (LRFTarget.ID == -999 or LRFTarget.x == nil or LRFTarget.y == nil or LRFTarget.z == nil) then
-		-- local roll = getCarRoll(vehID)
-		-- if isPointOnScreen(LRFTarget.x, LRFTarget.y, LRFTarget.z, 100) and math.abs(roll) < 30 then
-			-- if TDinfo.tdist > 500 then
-				-- local WX, WY = convert3DCoordsToScreen(LRFTarget.x, LRFTarget.y, LRFTarget.z)
-				-- renderDrawTexture(hud_lock, WX-25, WY-25, 50, 50, 0, RenderColor)
-			-- elseif TDinfo.tdist > 300 then
-				-- local WX, WY = convert3DCoordsToScreen(LRFTarget.x, LRFTarget.y, LRFTarget.z)
-				-- renderDrawTexture(hud_lock, WX-25, WY-25, 50, 50, 0, 0xFFFF0000)
-				-- render_text(Text_FontMedium, "VISUAL RANGE", WX-10, WY+10, 0xFFFF0000, 1, 0xFF000000)
-			-- else
-				-- render_text(Text_FontMedium, "Dogfight", WX-10, WY+10, 0xFFFF0000, 1, 0xFF000000)
-				-- render_text(Text_FontMain, "!DOGFIGHT!", CentralPosX-30, CentralPosY-10, 0xFFFF0000, 1, 0xFF000000)
-				-- settings.maincfg.AvionicsMode = 1
-			-- end
-		-- end
-	-- else
-	-- end
--- end
-
--- function PGZ(x, y, dist, angle)
-	-- local dX = dist * math.cos(angle)
-	-- local dY = dist * math.sin(angle)
-	-- if angle > 0 and angle < 90 then
-	-- elseif angle > 90 and angle < 180 then
-		-- dX = dX*-1
-	-- elseif angle > 180 and angle < 270 then
-		-- dX = dX*-1
-		-- dY = dY*-1
-	-- else
-		-- dY = dY*-1
-	-- end
-	-- local res = {x = dX + x, y = dY + y}
-	-- return res.x, res.y
--- end
-
--- function GetTD_Update()
-	
--- end
-
--- function TD_GetWeapon()
-	-- wp = sampTextdrawGetString(2077)
-	-- if #wp > 1 then
-		-- if string.find(wp, "Hydra") then
-			-- settings.maincfg.AvionicsMode = 2
-			-- WeapCur = wp
-		-- elseif string.find(wp, "AIM") then
-			-- settings.maincfg.AvionicsMode = 1
-			-- WeapCur = wp
-		-- end
-	-- else
-		-- return "NoWeap"
-	-- end
--- end
-
--- function TD_GetFuel()
-	-- wp = sampTextdrawGetString(2072)
--- end
-
 function keyOf(tbl, value)
     for k, v in pairs(tbl) do
         if v == value then
@@ -4242,8 +4097,6 @@ function AddMarkersData(marker)
 end
 function RenderLongRageMarker(x, y, z, dist)
 	local WX, WY = convert3DCoordsToScreen(x, y, z)
-	--renderDrawTexture(hud_comp, WX, WY, 10, 10, 45, 0xFF11FF11)
-	--renderSquare(WX, WY, 10, 0xFF11FF11)
 	renderRomb(WX, WY, 8, 0xFF11FF11)
 	renderFontDrawText(Text_FontLowest, string.format("[%d]", dist), WX-10, WY+10, 0xFF11FF11)
 end
@@ -4354,7 +4207,6 @@ function LoadFile_CMD(arg)
 	end
 	local wpData = safp.Load(path)
 	print("Loading flight plan:\n\"", path, "\"")
-	--getWorkingDirectory() .. "\\resource\\avionics\\flightplan\\Default.safp")
 	
 	for i = 1, #safp.Waypoints do
 		-- print("Adding WPT from file: ", safp.Waypoints[i].pos.x, safp.Waypoints[i].pos.y, safp.Waypoints[i].pos.z)
@@ -4456,11 +4308,10 @@ function UpdateLines_LND_Approach(vehID, vPX, vPY, vPZ)
 	
 	if isPointOnScreen(landing_data.Approach.x, landing_data.Approach.y, landing_data.Approach.z, 100) then
 		local wX, wY = convert3DCoordsToScreen(landing_data.Approach.x, landing_data.Approach.y, landing_data.Approach.z)
-		--renderDrawTexture(hud_comp, wX-15, wY-15, 30, 30, 45, RenderColor)
 		renderSquare(wX, wY, 10, RenderColor)
 		render_text(Text_FontLow, string.format("%s", landing_data.Airport), wX-13, wY-30, RenderColor, 1, 0xFF000000, false)
+		
 		local wX1, wY1 = convert3DCoordsToScreen(landing_data.Glidepath.x, landing_data.Glidepath.y, landing_data.Glidepath.z)
-		--renderDrawTexture(hud_comp, wX1-15, wY1-15, 30, 30, 0, RenderColor)
 		renderSquare(wX1, wY1, 10, RenderColor)
 		renderDrawLine(wX, wY, wX1, wY1, 1, RenderColor)
 	end
@@ -4504,12 +4355,10 @@ function UpdateLines_LND_Landing(vehID, vPX, vPY, vPZ, vRoll, vRZ, hDiff)
 		local wX, wY = convert3DCoordsToScreen(landing_data.Runway.x, landing_data.Runway.y, landing_data.Runway.z)
 		local wX1, wY1 = convert3DCoordsToScreen(landing_data.BPRM.x, landing_data.BPRM.y, landing_data.BPRM.z)
 		if CurProc < 0.05 then
-			--renderDrawTexture(hud_comp, wX1-15, wY1-15, 30, 30, 0, RenderColor)
 			renderSquare(wX1, wY1, 10, RenderColor)
 			renderDrawLine(wX, wY, wX1, wY1, 1, RenderColor)
 		end
 		if CurProc < 1 then
-			--renderDrawTexture(hud_comp, wX-10, wY-10, 20, 20, 45, RenderColor)
 			renderSquare(wX, wY, 10, RenderColor)
 			
 		end
@@ -4519,8 +4368,6 @@ function UpdateLines_LND_Landing(vehID, vPX, vPY, vPZ, vRoll, vRZ, hDiff)
 		renderDrawLine(wX1, wY1, wX2, wY2, 1, RenderColor)
 		renderSquare(wX1, wY1, 10, RenderColor)
 		renderSquare(wX2, wY2, 10, RenderColor)
-		-- renderDrawTexture(hud_comp, wX1-15, wY1-15, 30, 30, 45, RenderColor)
-		-- renderDrawTexture(hud_comp, wX2-15, wY2-15, 30, 30, 0, RenderColor)
 	end
 end
 
@@ -4572,11 +4419,10 @@ function UpdateLines_LND_Approach_RU(vehID, vPX, vPY, vPZ)
 	
 	if isPointOnScreen(landing_data.Approach.x, landing_data.Approach.y, landing_data.Approach.z, 100) then
 		local wX, wY = convert3DCoordsToScreen(landing_data.Approach.x, landing_data.Approach.y, landing_data.Approach.z)
-		--renderDrawTexture(hud_comp, wX-15, wY-15, 30, 30, 45, RenderColor)
 		renderSquare(wX, wY, 10, RenderColor)
 		render_text(Text_FontLow, string.format("%s", landing_data.Airport), wX-13, wY-30, RenderColor, 1, 0xFF000000, false)
+	
 		local wX1, wY1 = convert3DCoordsToScreen(landing_data.Glidepath.x, landing_data.Glidepath.y, landing_data.Glidepath.z)
-		--renderDrawTexture(hud_comp, wX1-15, wY1-15, 30, 30, 0, RenderColor)
 		renderSquare(wX1, wY1, 10, RenderColor)
 		renderDrawLine(wX, wY, wX1, wY1, 1, RenderColor)
 	end
@@ -4622,40 +4468,24 @@ function UpdateLines_LND_Landing_RU(vehID, vPX, vPY, vPZ, vRoll, vRZ, hDiff)
 		local wX, wY = convert3DCoordsToScreen(landing_data.Runway.x, landing_data.Runway.y, landing_data.Runway.z)
 		local wX1, wY1 = convert3DCoordsToScreen(landing_data.BPRM.x, landing_data.BPRM.y, landing_data.BPRM.z)
 		if CurProc < 0.05 then
-			--renderDrawTexture(hud_comp, wX1-15, wY1-15, 30, 30, 0, RenderColor)
 			renderSquare(wX1, wY1, 10, RenderColor)
 			renderDrawLine(wX, wY, wX1, wY1, 1, RenderColor)
 		end
 		if CurProc < 1 then
-			--renderDrawTexture(hud_comp, wX-10, wY-10, 20, 20, 45, RenderColor)
 			renderSquare(wX, wY, 10, RenderColor)
-			
 		end
 	elseif CurProc < 0.7 then
 		local wX1, wY1 = convert3DCoordsToScreen(landing_data.BPRM.x, landing_data.BPRM.y, landing_data.BPRM.z)
 		local wX2, wY2 = convert3DCoordsToScreen(landing_data.Glidepath.x, landing_data.Glidepath.y, landing_data.Glidepath.z)
 		renderDrawLine(wX1, wY1, wX2, wY2, 1, RenderColor)
-		--renderDrawTexture(hud_comp, wX1-15, wY1-15, 30, 30, 45, RenderColor)
 		renderSquare(wX1, wY1, 10, RenderColor)
 		renderSquare(wX2, wY2, 10, RenderColor)
-		--renderDrawTexture(hud_comp, wX2-15, wY2-15, 30, 30, 0, RenderColor)
 	end
 	
 	RenderTargetLineHorizontalRU(vehID, landing_data.Runway.x, landing_data.Runway.y, landing_data.Runway.z, 0xFF0000AA)
 end
 
--- function UpdateMapMarkerCoordinate()
-	-- local result, posX, posY, posZ = getTargetBlipCoordinates()
-	-- if result then
-		-- sampAddChatMessage(string.format("PosX: %.2f PosY: %.2f PosZ: %.2f", posX, posY, posZ), 0xFFFFFF00)
-	-- end
--- end
-
 ----------------------------------------------------------------------#region SAMPFUNCS-free зависимости сампфанкс
--- function sampAddChatMessage(message, color)
-
--- end
-
 function sampev.onSendCommand(command)
 	print("command: ", command)
 	local isAvionicsCommand = CommandRegisteredSwitch(command)
