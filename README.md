@@ -45,8 +45,8 @@ This script allows displaying basic flight parameters, auxiliary information for
 2. Replace the ````moonloader```` folder from the release archive into the game directory.
 
 ## Dependencies  
-1. moonloader v026 and above  
-   - [Download here](https://www.blast.hk/threads/13305/)  
+1. moonloader `v.027.0-preview3` and above  
+   - [Download here](https://www.blast.hk/threads/13305/post-386466)
 2. sampfuncs  
    - [Download here](https://www.blast.hk/threads/17/)  
 3. To use sampfuncs, the [CLEO4](https://cleo.li/download.html) library is required.  
