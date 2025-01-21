@@ -50,8 +50,8 @@
 2. Скопировать с заменой папку ````moonloader```` из релизного архива в папку с игрой
 
 ## Зависимости
-1. moonloader v026 и выше
-   - [Можно скачать тут](https://www.blast.hk/threads/13305/)
+1. moonloader `v.027.0-preview3` и выше
+   - [Можно скачать тут](https://www.blast.hk/threads/13305/page-2#post-386466)
 3. sampfuncs
    - [Можно скачать тут](https://www.blast.hk/threads/17/)
 4. Для работы sampfuncs необходима библиотека [CLEO4](https://cleo.li/download.html)
