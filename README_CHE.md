@@ -38,8 +38,8 @@ Tento skript umožňuje zobrazit na obrazovce informace o hlavních parametrech 
 2. Zkopírujte složku ````moonloader```` z archivovaného vydání do složky s hrou
 
 ## Závislosti
-1. moonloader v026 a vyšší
-   - [Stáhněte zde](https://www.blast.hk/threads/13305/)
+1. moonloader `v.027.0-preview3` a vyšší
+   - [Stáhněte zde](https://www.blast.hk/threads/13305/page-2#post-386466)
 3. sampfuncs
    - [Stáhněte zde](https://www.blast.hk/threads/17/)
 4. Pro správnou funkci sampfuncs je potřeba knihovna [CLEO4](https://cleo.li/download.html)
