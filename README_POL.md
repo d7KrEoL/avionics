@@ -38,8 +38,8 @@ Skrypt umożliwia wyświetlanie na ekranie informacji o podstawowych parametrach
 2. Skopiuj folder ````moonloader```` z archiwum wydania do folderu z grą
 
 ## Zależności
-1. moonloader v026 i wyższe
-   - [Pobierz tutaj](https://www.blast.hk/threads/13305/)
+1. moonloader `v.027.0-preview3` i wyższe
+   - [Pobierz tutaj](https://www.blast.hk/threads/13305/page-2#post-386466)
 3. sampfuncs
    - [Pobierz tutaj](https://www.blast.hk/threads/17/)
 4. Do działania sampfuncs wymagana jest biblioteka [CLEO4](https://cleo.li/download.html)
