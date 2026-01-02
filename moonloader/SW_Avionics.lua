@@ -1758,14 +1758,14 @@ function UpdatePlaneRText(vehID)
 	if vSpd < 40 and deltaZ < 0 and (radZ > 5) and not (isCharInAnyHeli(PLAYER_PED)) then--<60
 		T_vSpdColor = 0xFFCC0000
 		
-		if (isKeyDown(keys.VK_W) and not(sampIsChatInputActive())) then
+		if (isKeyDown(keys.VK_W) and not(sampIsChatInputActive()) and not (getCarModel(vehID) == 520)) then
 			if (getAudioStreamState(audio_maxG) == -1) and (getAudioStreamState(audio_power) == -1) and IsAudioAvaliable then
 				setAudioStreamState(audio_maxG, as_action.PLAY) 
 				IsAudioAvaliable = false
 				ResetAudioTimer()
 			end
 			renderFontDrawText(Text_FontMain, "Over-G!", CentralPosX-30, CentralPosY-20, 0xFFCC0000, false)
-		else
+		elseif (getCarModel(vehID) ~= 520) then
 			if (getAudioStreamState(audio_maxG) == -1) and (getAudioStreamState(audio_power) == -1) then
 				setAudioStreamState(audio_power, as_action.PLAY) 
 				IsAudioAvaliable = false
@@ -1989,7 +1989,7 @@ function UpdatePlaneRTextRU(vehID)
 				ResetAudioTimer()
 			end
 			renderFontDrawText(Text_FontMain, "!Перегрузка!", CentralPosX-70, CentralPosY-20, 0xFFCC0000, false)
-		else
+		elseif (getCarModel(vehID) ~= 520) then
 			if (getAudioStreamState(audio_maxG) == -1) and (getAudioStreamState(audio_power) == -1) then
 				setAudioStreamState(audio_power, as_action.PLAY) 
 				IsAudioAvaliable = false
