@@ -422,18 +422,10 @@ function GetLocalizationMessage(index)
 end
 
 function GetLocalizationFiles()
-	require'lfs'
 	local filenames = {}
-	for folder in lfs.dir(getGameDirectory() .. '\\moonloader\\resource\\avionics\\localization\\') do
-		if lfs.attributes(folder,"mode") == "directory" and folder ~= '..'  then 
-			for file in lfs.dir(getGameDirectory() .. '\\moonloader\\resource\\avionics\\localization\\' .. folder) do
-				 if file ~= '.' and file ~= '..' then
-					 table.insert(filenames, file)
-					 print("found localization file: " .. file)
-				end
-			end
-		end
-    end
+	local searchHandle, file = findFirstFile(string.format("%s\\resource\\avionics\\localization\\*.txt", getWorkingDirectory()));
+	table.insert(filenames, file)
+	while file do file = findNextFile(searchHandle) table.insert(filenames, file) end
     return filenames
 end
 
