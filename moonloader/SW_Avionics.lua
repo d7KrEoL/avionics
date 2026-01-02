@@ -422,18 +422,10 @@ function GetLocalizationMessage(index)
 end
 
 function GetLocalizationFiles()
-	require'lfs'
 	local filenames = {}
-	for folder in lfs.dir(getGameDirectory() .. '\\moonloader\\resource\\avionics\\localization\\') do
-		if lfs.attributes(folder,"mode") == "directory" and folder ~= '..'  then 
-			for file in lfs.dir(getGameDirectory() .. '\\moonloader\\resource\\avionics\\localization\\' .. folder) do
-				 if file ~= '.' and file ~= '..' then
-					 table.insert(filenames, file)
-					 print("found localization file: " .. file)
-				end
-			end
-		end
-    end
+	local searchHandle, file = findFirstFile(string.format("%s\\resource\\avionics\\localization\\*.txt", getWorkingDirectory()));
+	table.insert(filenames, file)
+	while file do file = findNextFile(searchHandle) table.insert(filenames, file) end
     return filenames
 end
 
@@ -1766,14 +1758,14 @@ function UpdatePlaneRText(vehID)
 	if vSpd < 40 and deltaZ < 0 and (radZ > 5) and not (isCharInAnyHeli(PLAYER_PED)) then--<60
 		T_vSpdColor = 0xFFCC0000
 		
-		if (isKeyDown(keys.VK_W) and not(sampIsChatInputActive())) then
+		if (isKeyDown(keys.VK_W) and not(sampIsChatInputActive()) and not (getCarModel(vehID) == 520)) then
 			if (getAudioStreamState(audio_maxG) == -1) and (getAudioStreamState(audio_power) == -1) and IsAudioAvaliable then
 				setAudioStreamState(audio_maxG, as_action.PLAY) 
 				IsAudioAvaliable = false
 				ResetAudioTimer()
 			end
 			renderFontDrawText(Text_FontMain, "Over-G!", CentralPosX-30, CentralPosY-20, 0xFFCC0000, false)
-		else
+		elseif (getCarModel(vehID) ~= 520) then
 			if (getAudioStreamState(audio_maxG) == -1) and (getAudioStreamState(audio_power) == -1) then
 				setAudioStreamState(audio_power, as_action.PLAY) 
 				IsAudioAvaliable = false
@@ -1997,7 +1989,7 @@ function UpdatePlaneRTextRU(vehID)
 				ResetAudioTimer()
 			end
 			renderFontDrawText(Text_FontMain, "!Перегрузка!", CentralPosX-70, CentralPosY-20, 0xFFCC0000, false)
-		else
+		elseif (getCarModel(vehID) ~= 520) then
 			if (getAudioStreamState(audio_maxG) == -1) and (getAudioStreamState(audio_power) == -1) then
 				setAudioStreamState(audio_power, as_action.PLAY) 
 				IsAudioAvaliable = false
